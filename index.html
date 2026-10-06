@@ -42,6 +42,10 @@
   .tab[data-active="true"] { color:var(--gold); border-bottom-color:var(--gold); }
   .view { display:none; }
   .view[data-show="true"] { display:block; }
+  #ranksSection { display:none; }
+  #ranksSection[data-show="true"] { display:block; }
+  #trialsSection { display:none; }
+  #trialsSection[data-show="true"] { display:block; }
 
   .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; }
   .stat { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px; }
@@ -138,6 +142,15 @@
 
     <div id="viewScores" class="view" data-show="true">
       <div class="panel">
+        <h2>💾 Importar/Exportar</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button type="button" id="btnExportCSV" class="submit" style="background: #4CAF50;">📥 Exportar CSV</button>
+          <button type="button" id="btnImportCSV" class="submit" style="background: #2196F3;">📤 Importar CSV</button>
+        </div>
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+      </div>
+
+      <div class="panel">
         <h2>📊 Resumen</h2>
         <div class="stats">
           <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total canciones</div></div>
@@ -158,9 +171,12 @@
       <div class="panel">
         <h2>🔍 Buscar Scores</h2>
         <div class="entry" style="margin-bottom: 12px;">
-          <div><label>Nombre de canción</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off" onkeyup="applySearch()"></div>
-          <div><label>Nivel</label><select id="searchLevel" onchange="applySearch()"><option value="">— Todos —</option></select></div>
-          <button type="button" class="submit" id="btnClearSearch" style="margin-top: 8px; background: #666;">Limpiar búsqueda</button>
+          <div><label>Nombre de canción (opcional)</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off"></div>
+          <div><label>Nivel (opcional)</label><select id="searchLevel"><option value="">— Ninguno —</option></select></div>
+          <div style="grid-column: 1/-1; display: flex; gap: 10px;">
+            <button type="button" class="submit" id="btnSearch" style="flex:1;">🔍 Buscar</button>
+            <button type="button" class="submit" id="btnClearSearch" style="flex:1; background: #666;">Limpiar</button>
+          </div>
         </div>
       </div>
 
@@ -323,8 +339,8 @@
   var searchFilters = { song: '', level: '' };
 
   function applySearch() {
-    searchFilters.song = document.getElementById('searchSong').value.toLowerCase();
-    searchFilters.level = document.getElementById('searchLevel').value;
+    searchFilters.song = (document.getElementById('searchSong').value || '').toLowerCase();
+    searchFilters.level = document.getElementById('searchLevel').value || '';
     renderScores();
   }
 
@@ -334,6 +350,75 @@
     document.getElementById('searchSong').value = '';
     document.getElementById('searchLevel').value = '';
     renderScores();
+  }
+
+  function exportCSV() {
+    var entries = mem.entries || [];
+    if (!entries.length) {
+      alert('⚠️ No hay scores para exportar');
+      return;
+    }
+    var csv = 'Canción,Nivel,Score,Estilo,Fecha\n';
+    entries.forEach(function (e) {
+      csv += '"' + (e.song || '').replace(/"/g, '""') + '",' + e.level + ',' + (e.score || 0) + ',' + (e.style || 'SP') + ',' + (e.date || '') + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ddr-scores-' + new Date().toISOString().split('T')[0] + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    alert('✅ Scores exportados correctamente');
+  }
+
+  function importCSV(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var csv = e.target.result;
+        var lines = csv.split('\n');
+        var imported = 0;
+        for (var i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          var cols = lines[i].split(',');
+          if (cols.length < 5) continue;
+          var song = cols[0].replace(/^"|"$/g, '').replace(/""/g, '"');
+          var level = parseInt(cols[1]);
+          var score = parseInt(cols[2]);
+          var style = cols[3].trim() || 'SP';
+          var date = cols[4].trim();
+          if (!song || !level || !score) continue;
+
+          var exists = mem.entries.find(function(e) {
+            return e.song.toLowerCase() === song.toLowerCase() && e.level === level && (e.style || 'SP') === style;
+          });
+          if (!exists || score > exists.score) {
+            if (exists) {
+              exists.score = score;
+              exists.date = date;
+            } else {
+              var maxId = mem.entries.reduce(function(m, e) { return Math.max(m, e.id || 0); }, 0);
+              mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
+            }
+            imported++;
+          }
+        }
+        if (imported > 0) {
+          pushUserDoc();
+          renderScores();
+          alert('✅ ' + imported + ' scores importados correctamente');
+        } else {
+          alert('⚠️ No hay scores nuevos para importar');
+        }
+      } catch (err) {
+        alert('❌ Error al importar CSV: ' + err.message);
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
   }
 
   function renderScores() {
@@ -629,13 +714,47 @@
   });
 
   // Form submission
-  // Limpiar búsqueda
-  var btnClear = document.getElementById('btnClearSearch');
-  if (btnClear) {
-    btnClear.addEventListener('click', function () {
-      clearSearch();
-    });
-  }
+  // Event listeners para búsqueda y export/import
+  setTimeout(function() {
+    var btnSearch = document.getElementById('btnSearch');
+    var btnClear = document.getElementById('btnClearSearch');
+    var btnExport = document.getElementById('btnExportCSV');
+    var btnImport = document.getElementById('btnImportCSV');
+    var fileInput = document.getElementById('csvFileInput');
+
+    if (btnSearch) {
+      btnSearch.addEventListener('click', function (e) {
+        e.preventDefault();
+        applySearch();
+      });
+    }
+    if (btnClear) {
+      btnClear.addEventListener('click', function (e) {
+        e.preventDefault();
+        clearSearch();
+      });
+    }
+    if (btnExport) {
+      btnExport.addEventListener('click', function (e) {
+        e.preventDefault();
+        exportCSV();
+      });
+    }
+    if (btnImport) {
+      btnImport.addEventListener('click', function (e) {
+        e.preventDefault();
+        fileInput.click();
+      });
+    }
+    if (fileInput) {
+      fileInput.addEventListener('change', function (e) {
+        if (e.target.files.length > 0) {
+          importCSV(e.target.files[0]);
+          fileInput.value = '';
+        }
+      });
+    }
+  }, 100);
 
   document.getElementById('formEntry').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -645,8 +764,33 @@
     var style = document.getElementById('inputStyle').value;
     var date = document.getElementById('inputDate').value;
     if (!song || !level || !score) return;
-    var maxId = mem.entries.reduce(function (m, e) { return Math.max(m, e.id || 0); }, 0);
-    mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
+
+    // Buscar si ya existe un score de la misma canción y nivel
+    var existingIdx = -1;
+    for (var i = 0; i < mem.entries.length; i++) {
+      if (mem.entries[i].song.toLowerCase() === song.toLowerCase() && mem.entries[i].level === level && (mem.entries[i].style || 'SP') === style) {
+        existingIdx = i;
+        break;
+      }
+    }
+
+    if (existingIdx >= 0) {
+      // Si existe y el nuevo score es mejor, reemplazar
+      if (score > mem.entries[existingIdx].score) {
+        mem.entries[existingIdx].score = score;
+        mem.entries[existingIdx].date = date;
+        alert('✅ Score actualizado a ' + score.toLocaleString('en-US') + ' (anterior: ' + mem.entries[existingIdx].score.toLocaleString('en-US') + ')');
+      } else {
+        alert('⚠️ Ya tienes un score más alto de esta canción:\n' + mem.entries[existingIdx].score.toLocaleString('en-US'));
+        return;
+      }
+    } else {
+      // Si no existe, crear nuevo
+      var maxId = mem.entries.reduce(function (m, e) { return Math.max(m, e.id || 0); }, 0);
+      mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
+      alert('✅ Score guardado correctamente');
+    }
+
     pushUserDoc();
     renderScores();
     document.getElementById('inputSong').value = '';
