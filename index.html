@@ -108,8 +108,8 @@
 <body>
 <div class="wrap">
   <header>
-    <div style="text-align: center; margin-bottom: 16px;">
-      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 120px; height: auto; border-radius: 8px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 200px; height: auto; border-radius: 8px;">
     </div>
     <h1>🎮 Registro DDR</h1>
     <p class="sub">Tu progreso personal por nivel de dificultad y tu avance en los rangos de LIFE4.</p>
@@ -136,22 +136,30 @@
 
     <div id="viewScores" class="view" data-show="true">
       <div class="panel">
-        <h2>Resumen</h2>
+        <h2>📊 Resumen</h2>
         <div class="stats">
           <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total canciones</div></div>
           <div class="stat"><div class="n" id="statBest">—</div><div class="l">Mejor score</div></div>
+        </div>
+        <div class="stats" style="margin-top: 12px;">
+          <div class="stat"><div class="n" id="statMFC_SP">0</div><div class="l">MFC (SP)</div></div>
           <div class="stat"><div class="n" id="statAAA_SP">0</div><div class="l">AAA (SP)</div></div>
+          <div class="stat"><div class="n" id="statAA_SP">0</div><div class="l">AA (SP)</div></div>
+        </div>
+        <div class="stats" style="margin-top: 12px;">
+          <div class="stat"><div class="n" id="statMFC_DP">0</div><div class="l">MFC (DP)</div></div>
+          <div class="stat"><div class="n" id="statAAA_DP">0</div><div class="l">AAA (DP)</div></div>
+          <div class="stat"><div class="n" id="statAA_DP">0</div><div class="l">AA (DP)</div></div>
         </div>
       </div>
 
       <div class="panel">
         <h2>🔍 Buscar Scores</h2>
-        <form class="entry" id="formSearch" style="margin-bottom: 12px;">
-          <div><label>Nombre de canción</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off"></div>
-          <div><label>Nivel</label><select id="searchLevel"><option value="">— Todos —</option></select></div>
-          <button type="button" class="submit" onclick="applySearch()" style="margin-top: 8px;">Buscar</button>
-          <button type="button" class="submit" onclick="clearSearch()" style="margin-top: 0; background: #666;">Limpiar</button>
-        </form>
+        <div class="entry" style="margin-bottom: 12px;">
+          <div><label>Nombre de canción</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off" onkeyup="applySearch()"></div>
+          <div><label>Nivel</label><select id="searchLevel" onchange="applySearch()"><option value="">— Todos —</option></select></div>
+          <button type="button" class="submit" id="btnClearSearch" style="margin-top: 8px; background: #666;">Limpiar búsqueda</button>
+        </div>
       </div>
 
       <div class="panel">
@@ -284,13 +292,24 @@
   }
 
   function addEvidence(rankIdx, subIdx) {
-    var url = prompt('Pega la URL de la evidencia (imagen o carpeta):');
-    if (url && url.trim()) {
-      var rankState = mem.ranks[rankIdx] || {};
-      rankState['evidence_' + subIdx] = url.trim();
-      mem.ranks[rankIdx] = rankState;
-      pushUserDoc();
-      renderRanks();
+    var rankState = mem.ranks[rankIdx] || {};
+    var currentEvidence = rankState['evidence_' + subIdx] || '';
+    var url = prompt('Pega la URL de la evidencia:\n(Imagen, carpeta, o enlace con screenshots/videos)', currentEvidence);
+    if (url !== null) {
+      if (url.trim()) {
+        rankState['evidence_' + subIdx] = url.trim();
+        mem.ranks[rankIdx] = rankState;
+        pushUserDoc();
+        renderRanks();
+        alert('✅ Evidencia guardada correctamente');
+      } else if (currentEvidence) {
+        // Eliminar si está vacío
+        delete rankState['evidence_' + subIdx];
+        mem.ranks[rankIdx] = rankState;
+        pushUserDoc();
+        renderRanks();
+        alert('✅ Evidencia eliminada');
+      }
     }
   }
 
@@ -320,8 +339,22 @@
     document.getElementById('statTotal').textContent = allEntries.length;
     var best = allEntries.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 0);
     document.getElementById('statBest').textContent = best ? best.toLocaleString('en-US') : '—';
+
+    // Estadísticas SP
     var mfc_sp = allEntries.filter(function (e) { return e.score >= 1000000 && (e.style || 'SP') === 'SP'; }).length;
-    document.getElementById('statAAA_SP').textContent = mfc_sp;
+    var aaa_sp = allEntries.filter(function (e) { return e.score >= 900000 && e.score < 1000000 && (e.style || 'SP') === 'SP'; }).length;
+    var aa_sp = allEntries.filter(function (e) { return e.score >= 800000 && e.score < 900000 && (e.style || 'SP') === 'SP'; }).length;
+    document.getElementById('statMFC_SP').textContent = mfc_sp;
+    document.getElementById('statAAA_SP').textContent = aaa_sp;
+    document.getElementById('statAA_SP').textContent = aa_sp;
+
+    // Estadísticas DP
+    var mfc_dp = allEntries.filter(function (e) { return e.score >= 1000000 && e.style === 'DP'; }).length;
+    var aaa_dp = allEntries.filter(function (e) { return e.score >= 900000 && e.score < 1000000 && e.style === 'DP'; }).length;
+    var aa_dp = allEntries.filter(function (e) { return e.score >= 800000 && e.score < 900000 && e.style === 'DP'; }).length;
+    document.getElementById('statMFC_DP').textContent = mfc_dp;
+    document.getElementById('statAAA_DP').textContent = aaa_dp;
+    document.getElementById('statAA_DP').textContent = aa_dp;
     var scoresList = document.getElementById('scoresList');
     scoresList.innerHTML = entries.length ? '' : '<div class="empty">' + (searchFilters.song || searchFilters.level ? 'Sin resultados' : 'Sin scores aún') + '</div>';
     entries.forEach(function (e) {
@@ -571,6 +604,14 @@
   });
 
   // Form submission
+  // Limpiar búsqueda
+  var btnClear = document.getElementById('btnClearSearch');
+  if (btnClear) {
+    btnClear.addEventListener('click', function () {
+      clearSearch();
+    });
+  }
+
   document.getElementById('formEntry').addEventListener('submit', function (e) {
     e.preventDefault();
     var song = document.getElementById('inputSong').value.trim();
