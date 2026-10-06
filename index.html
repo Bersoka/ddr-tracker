@@ -46,6 +46,10 @@
   #ranksSection[data-show="true"] { display:block; }
   #trialsSection { display:none; }
   #trialsSection[data-show="true"] { display:block; }
+  .song-suggestion { padding: 10px 12px; cursor: pointer; border-top: 1px solid var(--line); font-size: 13px; transition: background 0.2s; }
+  .song-suggestion:hover, .song-suggestion[data-selected="true"] { background: var(--surface-2); }
+  .song-suggestion-text { color: var(--text); }
+  .song-suggestion-count { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
 
   .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; }
   .stat { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px; }
@@ -183,7 +187,11 @@
       <div class="panel">
         <h2>Añadir Score</h2>
         <form class="entry" id="formEntry">
-          <div><label>Canción</label><input id="inputSong" placeholder="Nombre" autocomplete="off"></div>
+          <div style="position: relative; grid-column: 1/-1;">
+            <label>Canción</label>
+            <input id="inputSong" placeholder="Nombre" autocomplete="off" style="width: 100%;">
+            <div id="songSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-top: none; border-radius: 0 0 7px 7px; display: none; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+          </div>
           <div><label>Nivel</label><select id="inputLevel"><option>—</option></select></div>
           <div><label>Score</label><input id="inputScore" type="number" placeholder="0" min="0"></div>
           <div><label>Estilo</label><select id="inputStyle"><option value="SP">SP</option><option value="DP">DP</option></select></div>
@@ -372,6 +380,51 @@
     link.click();
     document.body.removeChild(link);
     alert('✅ Scores exportados correctamente');
+  }
+
+  function showSongSuggestions() {
+    var input = document.getElementById('inputSong');
+    var suggestionsDiv = document.getElementById('songSuggestions');
+    var query = (input.value || '').toLowerCase().trim();
+
+    if (!query) {
+      suggestionsDiv.style.display = 'none';
+      return;
+    }
+
+    // Obtener canciones únicas de mem.entries
+    var songSet = {};
+    (mem.entries || []).forEach(function(e) {
+      if (e.song) {
+        songSet[e.song] = (songSet[e.song] || 0) + 1;
+      }
+    });
+
+    // Filtrar canciones que contienen el query
+    var suggestions = Object.keys(songSet).filter(function(song) {
+      return song.toLowerCase().includes(query);
+    }).sort();
+
+    if (suggestions.length === 0) {
+      suggestionsDiv.style.display = 'none';
+      return;
+    }
+
+    suggestionsDiv.innerHTML = '';
+    suggestions.forEach(function(song) {
+      var div = document.createElement('div');
+      div.className = 'song-suggestion';
+      div.innerHTML = '<div class="song-suggestion-text">' + song + '</div>' +
+        '<div class="song-suggestion-count">' + songSet[song] + ' score(s)</div>';
+      div.addEventListener('click', function() {
+        input.value = song;
+        suggestionsDiv.style.display = 'none';
+        document.getElementById('inputLevel').focus();
+      });
+      suggestionsDiv.appendChild(div);
+    });
+
+    suggestionsDiv.style.display = 'block';
   }
 
   function importCSV(file) {
@@ -752,6 +805,17 @@
           importCSV(e.target.files[0]);
           fileInput.value = '';
         }
+      });
+    }
+
+    // Event listener para sugerencias de canción
+    var inputSong = document.getElementById('inputSong');
+    if (inputSong) {
+      inputSong.addEventListener('input', showSongSuggestions);
+      inputSong.addEventListener('blur', function() {
+        setTimeout(function() {
+          document.getElementById('songSuggestions').style.display = 'none';
+        }, 200);
       });
     }
   }, 100);
