@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro DDR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14121c; --surface: #1e1c29; --surface-2: #262336;
+    --text: #ece9f5; --text-dim: #9a94b3; --line: #33304a;
+    --gold: #ffc93c; --up:#ef5b5b; --down:#3fa9f5; --left:#38d996; --right:#ffc93c;
+    --danger: #ef5b5b; --ok:#38d996;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg:#f4f2fb; --surface:#fff; --surface-2:#ece8f9; --text:#1e1c29; --text-dim:#6b6584; --line:#ddd7ef; }
+  }
+  :root[data-theme="dark"] { --bg:#14121c; --surface:#1e1c29; --surface-2:#262336; --text:#ece9f5; --text-dim:#9a94b3; --line:#33304a; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Mono', ui-monospace, monospace; min-height:100%; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { margin-bottom: 16px; }
+  h1 { font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:clamp(26px,7vw,36px); letter-spacing:.5px; margin:0 0 4px; }
+  .sub { color:var(--text-dim); font-size:13px; line-height:1.5; max-width:48ch; }
+
+  .auth-section { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:20px; text-align:center; }
+  .auth-section.hidden { display:none; }
+  .google-btn { background:var(--gold); color:#221d12; border:none; border-radius:7px; padding:11px 20px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; cursor:pointer; width:100%; }
+  .google-btn:hover { opacity:0.9; }
+  .logout-btn { background:var(--danger); color:white; border:none; border-radius:7px; padding:8px 12px; font-size:12px; cursor:pointer; }
+
+  .tabs { display:flex; gap:8px; margin: 18px 0 20px; border-bottom:1px solid var(--line); }
+  .tab { background:none; border:none; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; padding:9px 4px; cursor:pointer; border-bottom:2px solid transparent; }
+  .tab[data-active="true"] { color:var(--gold); border-bottom-color:var(--gold); }
+  .view { display:none; }
+  .view[data-show="true"] { display:block; }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; }
+  .stat { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .stat .n { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:21px; color:var(--gold); }
+  .stat .l { color:var(--text-dim); font-size:10.5px; margin-top:2px; }
+
+  .panel { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:20px; }
+  .panel h2 { font-family:'Chakra Petch',sans-serif; font-size:15px; margin:0 0 12px; font-weight:600; }
+  form.entry { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  form.entry .full { grid-column:1/-1; }
+  label { display:block; font-size:10.5px; color:var(--text-dim); margin-bottom:4px; }
+  input, select { width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:7px; color:var(--text); padding:9px 10px; font-family:inherit; font-size:14px; }
+  input:focus, select:focus, button:focus { outline:2px solid var(--gold); outline-offset:1px; }
+  button.submit { grid-column:1/-1; background:var(--gold); color:#221d12; border:none; border-radius:7px; padding:11px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
+  .chip { border:1px solid var(--line); background:var(--surface); color:var(--text-dim); border-radius:999px; padding:7px 13px; font-size:12.5px; font-family:'Chakra Petch',sans-serif; font-weight:600; cursor:pointer; }
+  .chip[data-active="true"] { color:#14121c; border-color:transparent; background:var(--gold); }
+
+  .row { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:7px; }
+  .row .song { flex:1; min-width:0; }
+  .row .song .name { font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .song .date { color:var(--text-dim); font-size:10.5px; margin-top:2px; }
+  .row .score { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:15px; min-width:78px; text-align:right; }
+  .empty { text-align:center; color:var(--text-dim); font-size:13px; padding:30px 10px; border:1px dashed var(--line); border-radius:10px; }
+
+  .rank-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+  .rank-card-head { display:flex; align-items:center; justify-content:space-between; padding:13px 14px; cursor:pointer; }
+  .rank-card-head .title { display:flex; align-items:center; gap:9px; }
+  .rank-card-head .swatch { width:11px; height:11px; border-radius:3px; flex:none; }
+  .rank-card-head .name { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14.5px; }
+  .rank-card-head .prog { font-size:11px; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; }
+  .rank-card-head .prog[data-done="true"] { color:var(--ok); }
+  .rank-body { padding: 0 14px 14px; display:none; }
+  .rank-body[data-open="true"] { display:block; }
+  .req { display:block; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; line-height:1.4; }
+  .req:first-of-type { border-top:none; }
+  .req input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
+  .req label { color:var(--text); font-size:12.5px; margin:0; cursor:pointer; }
+  .req[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
+  .req-row { display:flex; align-items:flex-start; gap:9px; }
+  .req-row input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
+  .req-row label { flex:1; color: var(--text); font-size:12.5px; margin:0; cursor:pointer; }
+
+  .trial-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+  .trial-header { display:flex; align-items:center; justify-content:space-between; padding:13px 14px; cursor:pointer; }
+  .trial-title { display:flex; align-items:baseline; gap:8px; flex:1; }
+  .trial-name { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14.5px; }
+  .trial-info { font-size:11.5px; color:var(--text-dim); }
+  .trial-progress { font-size:11px; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; }
+  .trial-progress[data-done="true"] { color:var(--ok); }
+  .trial-body { padding: 14px; display:none; }
+  .bar { width:100%; height:6px; background:var(--surface-2); border-radius:3px; margin-bottom:10px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--gold); transition:width 0.2s; }
+  .trial-song { display:flex; align-items:flex-start; gap:9px; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .trial-song:first-of-type { border-top:none; }
+  .trial-song input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
+  .trial-song label { flex:1; color: var(--text); cursor:pointer; margin:0; }
+  .trial-song[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
+
+  .cloudStatus { padding:12px 14px; margin-bottom:18px; font-size:12px; border:1px solid var(--line); border-radius:10px; color:var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎮 Registro DDR</h1>
+    <p class="sub">Tu progreso personal por nivel de dificultad y tu avance en los rangos de LIFE4.</p>
+  </header>
+
+  <div class="auth-section" id="authSection">
+    <h2 style="margin-top:0; color:var(--text);">Inicia sesión con Google</h2>
+    <p style="color:var(--text-dim); font-size:12px; margin:0 0 12px;">Tus datos se sincronizarán en todos tus dispositivos.</p>
+    <button class="google-btn" id="googleLoginBtn">🔐 Iniciar sesión con Google</button>
+  </div>
+
+  <div id="appContent" class="hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div id="userInfo" style="font-size:12px; color:var(--text-dim);"></div>
+      <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+    </div>
+
+    <div class="cloudStatus" id="cloudStatus">Conectando…</div>
+
+    <div class="tabs">
+      <button class="tab" id="tabScores" data-active="true">Scores</button>
+      <button class="tab" id="tabLife4" data-active="false">LIFE4</button>
+    </div>
+
+    <div id="viewScores" class="view" data-show="true">
+      <div class="panel">
+        <h2>Resumen</h2>
+        <div class="stats">
+          <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total canciones</div></div>
+          <div class="stat"><div class="n" id="statBest">—</div><div class="l">Mejor score</div></div>
+          <div class="stat"><div class="n" id="statAAA_SP">0</div><div class="l">AAA (SP)</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Añadir Score</h2>
+        <form class="entry" id="formEntry">
+          <div><label>Canción</label><input id="inputSong" placeholder="Nombre" autocomplete="off"></div>
+          <div><label>Nivel</label><select id="inputLevel"><option>—</option></select></div>
+          <div><label>Score</label><input id="inputScore" type="number" placeholder="0" min="0"></div>
+          <div><label>Estilo</label><select id="inputStyle"><option value="SP">SP</option><option value="DP">DP</option></select></div>
+          <div><label>Fecha</label><input id="inputDate" type="date"></div>
+          <button type="submit" class="submit">Guardar</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Scores</h2>
+        <div id="scoresList"></div>
+      </div>
+    </div>
+
+    <div id="viewLife4" class="view" data-show="false">
+      <div class="tabs" style="margin:0 0 16px; border-bottom:1px solid var(--line);">
+        <button class="tab" id="subTabRanks" data-active="true">Rangos</button>
+        <button class="tab" id="subTabTrials" data-active="false">Trials</button>
+      </div>
+
+      <div id="ranksSection" data-show="true">
+        <div class="panel">
+          <h2>Tu Rango Actual 🎖️</h2>
+          <div id="currentRankBanner" style="font-size:24px; text-align:center; padding:16px; background:var(--surface-2); border-radius:10px;">—</div>
+        </div>
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:18px; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;">Completa los requisitos de cada subrango (I a V) para subir de rango.</div>
+        <div id="ranksList"></div>
+      </div>
+
+      <div id="trialsSection" data-show="false">
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:18px; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;">Completa las 4 canciones de cada trial. Guarda evidencia (screenshots/videos) de tu progreso.</div>
+        <div id="trialsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const firebaseConfig = {
+    apiKey: "AIzaSyAVmAF4OoYmKfV7YjPDo6bWEGWq4lHEXHc",
+    authDomain: "ddr-tracker-cf2cf.firebaseapp.com",
+    databaseURL: "https://ddr-tracker-cf2cf-default-rtdb.firebaseio.com",
+    projectId: "ddr-tracker-cf2cf",
+    storageBucket: "ddr-tracker-cf2cf.appspot.com",
+    messagingSenderId: "844261318370",
+    appId: "1:844261318370:web:6e58d3c8d5e6f9e7d8c1c7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  var KEY = 'ddr_life4_entries';
+  var RKEY = 'ddr_life4_ranks';
+  var TKEY = 'ddr_life4_trials';
+  var LEVELS = [12, 13, 14, 15, 16, 17, 18, 19];
+  
+  var cloud = { on: false, userId: null, ref: null };
+  var mem = { entries: [], ranks: {}, trials: {} };
+  
+  var RANK_COLORS = {
+    "Noveice": "#888888", "Bronze": "#CD7F32", "Silver": "#C0C0C0", "Gold": "#FFD700",
+    "Platinum": "#E5E4E2", "Diamond": "#00D9FF", "Ruby": "#E0115F", "Sapphire": "#0F52BA",
+    "Emerald": "#50C878", "Jade": "#00A86B", "Garnet": "#733635", "Pearl": "#F9F6F2",
+    "Opal": "#A8A9AD"
+  };
+  
+  var RANK_ICONS = {
+    "Noveice": "🌑", "Bronze": "🥉", "Silver": "🥈", "Gold": "🥇", "Platinum": "💎",
+    "Diamond": "💠", "Ruby": "🩸", "Sapphire": "💙", "Emerald": "💚",
+    "Jade": "🟢", "Garnet": "❤️", "Pearl": "🤍", "Opal": "🔮"
+  };
+  
+  var RANKS = [
+    { name: "Noveice", subs: [{ name: "Clear 20 Lv12 songs", checks: 1 }, { name: "Get 5 grades A or higher", checks: 5 }, { name: "Pass 2 Lv13 songs", checks: 2 }, { name: "Pass 1 Lv14 song", checks: 1 }, { name: "Complete trial Lv12 x2", checks: 2 }]},
+    { name: "Bronze", subs: [{ name: "Clear 30 Lv13 songs", checks: 30 }, { name: "Get 10 grades AA or higher", checks: 10 }, { name: "Pass 5 Lv14 songs", checks: 5 }, { name: "Pass 2 Lv15 songs", checks: 2 }, { name: "Complete trial Lv13 x1", checks: 1 }]},
+    { name: "Silver", subs: [{ name: "Get 5 MFC scores", checks: 5 }, { name: "Clear 20 Lv14 songs", checks: 20 }, { name: "Pass 5 Lv15 songs", checks: 5 }, { name: "Pass 3 Lv16 songs", checks: 3 }, { name: "Complete trial Lv14 x1", checks: 1 }]},
+    { name: "Gold", subs: [{ name: "Clear 30 Lv14 songs", checks: 30 }, { name: "Pass 10 Lv15 songs", checks: 10 }, { name: "Pass 8 Lv16 songs", checks: 8 }, { name: "Pass 2 Lv17 songs", checks: 2 }, { name: "Complete trial Lv15 x1", checks: 1 }]},
+    { name: "Platinum", subs: [{ name: "Get 10 MFC scores", checks: 10 }, { name: "Clear 40 Lv15 songs", checks: 40 }, { name: "Pass 15 Lv16 songs", checks: 15 }, { name: "Pass 5 Lv17 songs", checks: 5 }, { name: "Complete trial Lv16 x2", checks: 2 }]},
+    { name: "Diamond", subs: [{ name: "Get 15 MFC scores", checks: 15 }, { name: "Clear 50 Lv16 songs", checks: 50 }, { name: "Pass 20 Lv17 songs", checks: 20 }, { name: "Pass 5 Lv18 songs", checks: 5 }, { name: "Complete trial Lv17 x2", checks: 2 }]},
+    { name: "Ruby", subs: [{ name: "Get 20 MFC scores", checks: 20 }, { name: "Clear 60 Lv17 songs", checks: 60 }, { name: "Pass 20 Lv18 songs", checks: 20 }, { name: "Pass 8 Lv19 songs", checks: 8 }, { name: "Complete trial Lv18 x3", checks: 3 }]},
+    { name: "Sapphire", subs: [{ name: "Get 25 MFC scores", checks: 25 }, { name: "Clear 70 Lv18 songs", checks: 70 }, { name: "Pass 30 Lv19 songs", checks: 30 }, { name: "AAA rate 80%+ on 5 Lv18 songs", checks: 5 }, { name: "Complete trial Lv19 x1", checks: 1 }]},
+    { name: "Emerald", subs: [{ name: "Get 30 MFC scores", checks: 30 }, { name: "Full combo 10 Lv19 songs", checks: 10 }, { name: "PFC 5 Lv18 songs", checks: 5 }, { name: "Clear all Lv19 songs in folder", checks: 1 }, { name: "Complete trial Lv19 x5", checks: 5 }]},
+    { name: "Jade", subs: [{ name: "Get 40 MFC scores", checks: 40 }, { name: "PFC 10 Lv19 songs", checks: 10 }, { name: "Full combo all Lv19 songs", checks: 1 }, { name: "AAA rate 90%+ on Lv19", checks: 1 }, { name: "Master 100% of trials", checks: 1 }]},
+    { name: "Garnet", subs: [{ name: "Insane mode: 50 MFC scores", checks: 50 }, { name: "Expert survival: Pass 10 Lv19 non-stop", checks: 10 }, { name: "Speedrun: Clear 100 Lv19 in best time", checks: 100 }, { name: "Challenge: Beat extreme trials", checks: 3 }, { name: "Legendary: 100% MFC rate on one session", checks: 1 }]},
+    { name: "Pearl", subs: [{ name: "Celestial: 75 MFC scores", checks: 75 }, { name: "Eternal: 24-hour marathon clear", checks: 1 }, { name: "Apex: Max score on hardest chart", checks: 1 }, { name: "Divine: Perfect play consistency", checks: 1 }, { name: "Eternal Master: Complete all challenges", checks: 1 }]},
+    { name: "Opal", subs: [{ name: "Infinity: Unlimited MFC scores", checks: 1 }, { name: "Transcendence: Redefine possible", checks: 1 }, { name: "Omnipotence: Master all modes", checks: 1 }, { name: "Eternity: Timeless perfection", checks: 1 }, { name: "Beyond: Surpass all limits", checks: 1 }]}
+  ];
+
+  var TRIALS = [
+    {id:"trial-124-1", name:"Trial 124-A", tier:124, songs:4}, {id:"trial-124-2", name:"Trial 124-B", tier:124, songs:4},
+    {id:"trial-124-3", name:"Trial 124-C", tier:124, songs:4}, {id:"trial-124-4", name:"Trial 124-D", tier:124, songs:4},
+    {id:"trial-134-1", name:"Trial 134-A", tier:134, songs:4}, {id:"trial-134-2", name:"Trial 134-B", tier:134, songs:4},
+    {id:"trial-134-3", name:"Trial 134-C", tier:134, songs:4}, {id:"trial-134-4", name:"Trial 134-D", tier:134, songs:4},
+    {id:"trial-144-1", name:"Trial 144-A", tier:144, songs:4}, {id:"trial-144-2", name:"Trial 144-B", tier:144, songs:4},
+    {id:"trial-144-3", name:"Trial 144-C", tier:144, songs:4}, {id:"trial-144-4", name:"Trial 144-D", tier:144, songs:4},
+    {id:"trial-154-1", name:"Trial 154-A", tier:154, songs:4}, {id:"trial-154-2", name:"Trial 154-B", tier:154, songs:4},
+    {id:"trial-154-3", name:"Trial 154-C", tier:154, songs:4}, {id:"trial-154-4", name:"Trial 154-D", tier:154, songs:4},
+    {id:"trial-164-1", name:"Trial 164-A", tier:164, songs:4}, {id:"trial-164-2", name:"Trial 164-B", tier:164, songs:4},
+    {id:"trial-164-3", name:"Trial 164-C", tier:164, songs:4}, {id:"trial-164-4", name:"Trial 164-D", tier:164, songs:4},
+    {id:"trial-174-1", name:"Trial 174-A", tier:174, songs:4}, {id:"trial-174-2", name:"Trial 174-B", tier:174, songs:4},
+    {id:"trial-174-3", name:"Trial 174-C", tier:174, songs:4}, {id:"trial-174-4", name:"Trial 174-D", tier:174, songs:4},
+    {id:"trial-184-1", name:"Trial 184-A", tier:184, songs:4}, {id:"trial-184-2", name:"Trial 184-B", tier:184, songs:4},
+    {id:"trial-184-3", name:"Trial 184-C", tier:184, songs:4}, {id:"trial-184-4", name:"Trial 184-D", tier:184, songs:4},
+    {id:"trial-194-1", name:"Trial 194-A", tier:194, songs:4}, {id:"trial-194-2", name:"Trial 194-B", tier:194, songs:4},
+    {id:"trial-194-3", name:"Trial 194-C", tier:194, songs:4}, {id:"trial-194-4", name:"Trial 194-D", tier:194, songs:4}
+  ];
+
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
+  function setCloudStatus(text, ok) {
+    var el = document.getElementById('cloudStatus');
+    el.textContent = text;
+    el.style.color = ok ? 'var(--ok)' : 'var(--text-dim)';
+    el.style.borderColor = ok ? 'var(--ok)' : 'var(--line)';
+  }
+
+  function pushUserDoc() {
+    if (!cloud.on || !cloud.ref) return;
+    cloud.ref.set({ entries: clone(mem.entries), ranks: clone(mem.ranks), trials: clone(mem.trials) })
+      .then(function () { setCloudStatus('✅ Sincronizado en la nube — accesible desde cualquier dispositivo.', true); })
+      .catch(function (e) { setCloudStatus('❌ Error: ' + (e.message || 'error')); });
+  }
+
+  function renderScores() {
+    var entries = mem.entries || [];
+    document.getElementById('statTotal').textContent = entries.length;
+    var best = entries.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 0);
+    document.getElementById('statBest').textContent = best ? best.toLocaleString('en-US') : '—';
+    var mfc_sp = entries.filter(function (e) { return e.score >= 1000000 && (e.style || 'SP') === 'SP'; }).length;
+    document.getElementById('statAAA_SP').textContent = mfc_sp;
+    var scoresList = document.getElementById('scoresList');
+    scoresList.innerHTML = entries.length ? '' : '<div class="empty">Sin scores aún</div>';
+    entries.forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = '<div class="song"><div class="name">' + e.song + ' (Lv' + e.level + ')</div><div class="date">' + (e.date || '—') + '</div></div>' +
+        '<div class="score">' + (e.score ? e.score.toLocaleString('en-US') : '—') + '</div>';
+      scoresList.appendChild(row);
+    });
+  }
+
+  function renderRanks() {
+    var ranksList = document.getElementById('ranksList');
+    ranksList.innerHTML = '';
+    RANKS.forEach(function (rank, rankIdx) {
+      var rankState = mem.ranks[rankIdx] || {};
+      var card = document.createElement('div');
+      card.className = 'rank-card';
+      var head = document.createElement('div');
+      head.className = 'rank-card-head';
+      var completed = 0;
+      [0,1,2,3,4].forEach(function (i) { if (rankState[i]) completed++; });
+      var isDone = completed === 5;
+      head.innerHTML = '<div class="title"><div class="swatch" style="background:' + RANK_COLORS[rank.name] + '"></div>' +
+        '<div><div class="name">' + RANK_ICONS[rank.name] + ' ' + rank.name + '</div></div></div>' +
+        '<div class="prog" data-done="' + isDone + '">' + completed + '/5</div>';
+      card.appendChild(head);
+      var body = document.createElement('div');
+      body.className = 'rank-body';
+      rank.subs.forEach(function (sub, i) {
+        var req = document.createElement('div');
+        req.className = 'req';
+        req.innerHTML = '<div class="req-row"><input type="checkbox" id="req-' + rankIdx + '-' + i + '" ' + (rankState[i] ? 'checked' : '') + '>' +
+          '<label for="req-' + rankIdx + '-' + i + '">' + sub.name + '</label></div>';
+        var chk = req.querySelector('input');
+        chk.addEventListener('change', function () {
+          rankState[i] = chk.checked;
+          mem.ranks[rankIdx] = rankState;
+          pushUserDoc();
+          renderRanks();
+        });
+        body.appendChild(req);
+      });
+      card.appendChild(body);
+      head.addEventListener('click', function () {
+        body.dataset.open = body.dataset.open !== 'true' ? 'true' : 'false';
+      });
+      ranksList.appendChild(card);
+    });
+    var currentIdx = Object.keys(mem.ranks).reduce(function (max, k) { 
+      var state = mem.ranks[k];
+      var completed = [0,1,2,3,4].reduce(function (sum, i) { return sum + (state[i] ? 1 : 0); }, 0);
+      return completed === 5 && parseInt(k) > max ? parseInt(k) : max;
+    }, -1) + 1;
+    var banner = document.getElementById('currentRankBanner');
+    if (currentIdx < RANKS.length) {
+      banner.textContent = RANK_ICONS[RANKS[currentIdx].name] + ' ' + RANKS[currentIdx].name;
+    }
+  }
+
+  var openTrials = {};
+  function renderTrials() {
+    var state = mem.trials;
+    var wrap = document.getElementById('trialsList');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var byTier = {};
+    TRIALS.forEach(function (trial) {
+      if (!byTier[trial.tier]) byTier[trial.tier] = [];
+      byTier[trial.tier].push(trial);
+    });
+    Object.keys(byTier).sort().forEach(function (tier) {
+      var tierDiv = document.createElement('div');
+      byTier[tier].forEach(function (trial) {
+        var trialKey = trial.id;
+        var completed = state[trialKey] ? Object.keys(state[trialKey]).filter(function (k) { return state[trialKey][k]; }).length : 0;
+        var isDone = completed >= trial.songs;
+        var card = document.createElement('div');
+        card.className = 'trial-card';
+        var header = document.createElement('div');
+        header.className = 'trial-header';
+        var titleDiv = document.createElement('div');
+        titleDiv.className = 'trial-title';
+        var titleSpan = document.createElement('span');
+        titleSpan.className = 'trial-name';
+        titleSpan.textContent = trial.name;
+        titleDiv.appendChild(titleSpan);
+        var infoSpan = document.createElement('span');
+        infoSpan.className = 'trial-info';
+        infoSpan.textContent = '(' + trial.songs + ' canciones)';
+        titleDiv.appendChild(infoSpan);
+        header.appendChild(titleDiv);
+        var progSpan = document.createElement('span');
+        progSpan.className = 'trial-progress';
+        progSpan.dataset.done = isDone;
+        progSpan.textContent = completed + '/' + trial.songs + (isDone ? ' ✓' : '');
+        header.appendChild(progSpan);
+        card.appendChild(header);
+        var body = document.createElement('div');
+        body.className = 'trial-body';
+        body.style.display = openTrials[trialKey] ? 'block' : 'none';
+        var barDiv = document.createElement('div');
+        barDiv.className = 'bar';
+        var barFill = document.createElement('div');
+        barFill.className = 'bar-fill';
+        barFill.style.width = Math.min(100, (completed / trial.songs) * 100) + '%';
+        barDiv.appendChild(barFill);
+        body.appendChild(barDiv);
+        for (var i = 0; i < trial.songs; i++) {
+          (function (trialKey, i) {
+            var isChecked = state[trialKey] && state[trialKey][i];
+            var req = document.createElement('div');
+            req.className = 'trial-song';
+            req.dataset.checked = isChecked;
+            var cid = trialKey + '-' + i;
+            var chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.id = cid;
+            chk.checked = isChecked;
+            req.appendChild(chk);
+            var lbl = document.createElement('label');
+            lbl.htmlFor = cid;
+            lbl.textContent = 'Canción ' + (i + 1);
+            req.appendChild(lbl);
+            body.appendChild(req);
+            chk.addEventListener('change', function (ev) {
+              var st = clone(mem.trials);
+              if (!st[trialKey]) st[trialKey] = {};
+              st[trialKey][i] = ev.target.checked;
+              mem.trials = st;
+              pushUserDoc();
+              var completed2 = st[trialKey] ? Object.keys(st[trialKey]).filter(function (k) { return st[trialKey][k]; }).length : 0;
+              progSpan.textContent = completed2 + '/' + trial.songs + (completed2 >= trial.songs ? ' ✓' : '');
+              progSpan.dataset.done = completed2 >= trial.songs;
+              barFill.style.width = Math.min(100, (completed2 / trial.songs) * 100) + '%';
+            });
+          })(trialKey, i);
+        }
+        card.appendChild(body);
+        header.addEventListener('click', function (ev) {
+          if (ev.target.tagName === 'BUTTON' || ev.target.tagName === 'INPUT') return;
+          openTrials[trialKey] = !openTrials[trialKey];
+          body.style.display = openTrials[trialKey] ? 'block' : 'none';
+        });
+        tierDiv.appendChild(card);
+      });
+      wrap.appendChild(tierDiv);
+    });
+  }
+
+  function initCloud() {
+    setCloudStatus('Cargando datos…');
+    cloud.ref = db.ref('users/' + cloud.userId + '/data');
+    cloud.on = true;
+    
+    cloud.ref.on('value', function (snap) {
+      if (!snap.exists()) {
+        mem.entries = [];
+        mem.ranks = {};
+        mem.trials = {};
+      } else {
+        var data = snap.val();
+        mem.entries = data.entries || [];
+        mem.ranks = data.ranks || {};
+        mem.trials = data.trials || {};
+      }
+      renderScores();
+      renderRanks();
+      renderTrials();
+      setCloudStatus('✅ Sincronizado — datos disponibles en cualquier dispositivo.', true);
+    }, function (err) {
+      setCloudStatus('❌ Error: ' + (err.message || 'error'));
+    });
+  }
+
+  // Google Login
+  document.getElementById('googleLoginBtn').addEventListener('click', function () {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(function (e) {
+      setCloudStatus('❌ Error en login: ' + (e.message || 'error'));
+    });
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    auth.signOut();
+  });
+
+  // Monitor auth state
+  auth.onAuthStateChanged(function (user) {
+    var authSection = document.getElementById('authSection');
+    var appContent = document.getElementById('appContent');
+    
+    if (user) {
+      cloud.userId = user.uid;
+      document.getElementById('userInfo').textContent = '👤 ' + (user.displayName || user.email);
+      authSection.classList.add('hidden');
+      appContent.classList.remove('hidden');
+      initCloud();
+    } else {
+      authSection.classList.remove('hidden');
+      appContent.classList.add('hidden');
+      cloud.on = false;
+    }
+  });
+
+  // Tab switching
+  document.getElementById('tabScores').addEventListener('click', function () {
+    document.getElementById('tabScores').dataset.active = 'true';
+    document.getElementById('tabLife4').dataset.active = 'false';
+    document.getElementById('viewScores').dataset.show = 'true';
+    document.getElementById('viewLife4').dataset.show = 'false';
+  });
+
+  document.getElementById('tabLife4').addEventListener('click', function () {
+    document.getElementById('tabLife4').dataset.active = 'true';
+    document.getElementById('tabScores').dataset.active = 'false';
+    document.getElementById('viewLife4').dataset.show = 'true';
+    document.getElementById('viewScores').dataset.show = 'false';
+  });
+
+  document.getElementById('subTabRanks').addEventListener('click', function () {
+    document.getElementById('subTabRanks').dataset.active = 'true';
+    document.getElementById('subTabTrials').dataset.active = 'false';
+    document.getElementById('ranksSection').dataset.show = 'true';
+    document.getElementById('trialsSection').dataset.show = 'false';
+  });
+
+  document.getElementById('subTabTrials').addEventListener('click', function () {
+    document.getElementById('subTabTrials').dataset.active = 'true';
+    document.getElementById('subTabRanks').dataset.active = 'false';
+    document.getElementById('ranksSection').dataset.show = 'false';
+    document.getElementById('trialsSection').dataset.show = 'true';
+  });
+
+  // Form submission
+  document.getElementById('formEntry').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var song = document.getElementById('inputSong').value.trim();
+    var level = parseInt(document.getElementById('inputLevel').value);
+    var score = parseInt(document.getElementById('inputScore').value) || 0;
+    var style = document.getElementById('inputStyle').value;
+    var date = document.getElementById('inputDate').value;
+    if (!song || !level || !score) return;
+    var maxId = mem.entries.reduce(function (m, e) { return Math.max(m, e.id || 0); }, 0);
+    mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
+    pushUserDoc();
+    renderScores();
+    document.getElementById('inputSong').value = '';
+    document.getElementById('inputLevel').value = '—';
+    document.getElementById('inputScore').value = '';
+    document.getElementById('inputDate').value = '';
+  });
+
+  LEVELS.forEach(function (lv) {
+    var opt = document.createElement('option');
+    opt.value = lv;
+    opt.textContent = 'Lv ' + lv;
+    document.getElementById('inputLevel').appendChild(opt);
+  });
+
+  // Hide auth section initially
+  document.getElementById('authSection').classList.add('hidden');
+  document.getElementById('appContent').classList.add('hidden');
+})();
+</script>
+</body>
+</html>
