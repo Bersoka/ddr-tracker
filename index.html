@@ -108,6 +108,9 @@
 <body>
 <div class="wrap">
   <header>
+    <div style="text-align: center; margin-bottom: 16px;">
+      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 120px; height: auto; border-radius: 8px;">
+    </div>
     <h1>🎮 Registro DDR</h1>
     <p class="sub">Tu progreso personal por nivel de dificultad y tu avance en los rangos de LIFE4.</p>
   </header>
@@ -139,6 +142,16 @@
           <div class="stat"><div class="n" id="statBest">—</div><div class="l">Mejor score</div></div>
           <div class="stat"><div class="n" id="statAAA_SP">0</div><div class="l">AAA (SP)</div></div>
         </div>
+      </div>
+
+      <div class="panel">
+        <h2>🔍 Buscar Scores</h2>
+        <form class="entry" id="formSearch" style="margin-bottom: 12px;">
+          <div><label>Nombre de canción</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off"></div>
+          <div><label>Nivel</label><select id="searchLevel"><option value="">— Todos —</option></select></div>
+          <button type="button" class="submit" onclick="applySearch()" style="margin-top: 8px;">Buscar</button>
+          <button type="button" class="submit" onclick="clearSearch()" style="margin-top: 0; background: #666;">Limpiar</button>
+        </form>
       </div>
 
       <div class="panel">
@@ -270,15 +283,47 @@
       .catch(function (e) { setCloudStatus('❌ Error: ' + (e.message || 'error')); });
   }
 
+  function addEvidence(rankIdx, subIdx) {
+    var url = prompt('Pega la URL de la evidencia (imagen o carpeta):');
+    if (url && url.trim()) {
+      var rankState = mem.ranks[rankIdx] || {};
+      rankState['evidence_' + subIdx] = url.trim();
+      mem.ranks[rankIdx] = rankState;
+      pushUserDoc();
+      renderRanks();
+    }
+  }
+
+  var searchFilters = { song: '', level: '' };
+
+  function applySearch() {
+    searchFilters.song = document.getElementById('searchSong').value.toLowerCase();
+    searchFilters.level = document.getElementById('searchLevel').value;
+    renderScores();
+  }
+
+  function clearSearch() {
+    searchFilters.song = '';
+    searchFilters.level = '';
+    document.getElementById('searchSong').value = '';
+    document.getElementById('searchLevel').value = '';
+    renderScores();
+  }
+
   function renderScores() {
-    var entries = mem.entries || [];
-    document.getElementById('statTotal').textContent = entries.length;
-    var best = entries.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 0);
+    var entries = (mem.entries || []).filter(function (e) {
+      var songMatch = !searchFilters.song || (e.song || '').toLowerCase().includes(searchFilters.song);
+      var levelMatch = !searchFilters.level || (e.level == parseInt(searchFilters.level));
+      return songMatch && levelMatch;
+    });
+    var allEntries = mem.entries || [];
+    document.getElementById('statTotal').textContent = allEntries.length;
+    var best = allEntries.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 0);
     document.getElementById('statBest').textContent = best ? best.toLocaleString('en-US') : '—';
-    var mfc_sp = entries.filter(function (e) { return e.score >= 1000000 && (e.style || 'SP') === 'SP'; }).length;
+    var mfc_sp = allEntries.filter(function (e) { return e.score >= 1000000 && (e.style || 'SP') === 'SP'; }).length;
     document.getElementById('statAAA_SP').textContent = mfc_sp;
     var scoresList = document.getElementById('scoresList');
-    scoresList.innerHTML = entries.length ? '' : '<div class="empty">Sin scores aún</div>';
+    scoresList.innerHTML = entries.length ? '' : '<div class="empty">' + (searchFilters.song || searchFilters.level ? 'Sin resultados' : 'Sin scores aún') + '</div>';
     entries.forEach(function (e) {
       var row = document.createElement('div');
       row.className = 'row';
@@ -309,8 +354,11 @@
       rank.subs.forEach(function (sub, i) {
         var req = document.createElement('div');
         req.className = 'req';
+        var evidence = rankState['evidence_' + i] || '';
+        var evidenceHTML = evidence ? '<a href="' + evidence + '" target="_blank" style="color:var(--gold); font-size:11px; display:block; margin-top:6px;">📎 Ver evidencia</a>' : '';
         req.innerHTML = '<div class="req-row"><input type="checkbox" id="req-' + rankIdx + '-' + i + '" ' + (rankState[i] ? 'checked' : '') + '>' +
-          '<label for="req-' + rankIdx + '-' + i + '">' + sub.name + '</label></div>';
+          '<label for="req-' + rankIdx + '-' + i + '">' + sub.name + '</label>' +
+          '<button type="button" onclick="addEvidence(' + rankIdx + ', ' + i + ')" style="margin-left:auto; padding:4px 8px; font-size:11px; background:var(--gold); border:none; border-radius:4px; cursor:pointer; color:#221d12; font-weight:bold;">+ Evidencia</button></div>' + evidenceHTML;
         var chk = req.querySelector('input');
         chk.addEventListener('change', function () {
           rankState[i] = chk.checked;
@@ -546,6 +594,10 @@
     opt.value = lv;
     opt.textContent = 'Lv ' + lv;
     document.getElementById('inputLevel').appendChild(opt);
+    var opt2 = document.createElement('option');
+    opt2.value = lv;
+    opt2.textContent = 'Lv ' + lv;
+    document.getElementById('searchLevel').appendChild(opt2);
   });
 
   // Hide auth section initially
