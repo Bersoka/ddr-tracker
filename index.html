@@ -469,19 +469,29 @@
   auth.onAuthStateChanged(function (user) {
     var authSection = document.getElementById('authSection');
     var appContent = document.getElementById('appContent');
-    
+
     if (user) {
       cloud.userId = user.uid;
       document.getElementById('userInfo').textContent = '👤 ' + (user.displayName || user.email);
       authSection.classList.add('hidden');
       appContent.classList.remove('hidden');
+      setCloudStatus('Conectando con tu cuenta de Google…');
       initCloud();
     } else {
       authSection.classList.remove('hidden');
       appContent.classList.add('hidden');
       cloud.on = false;
+      // Limpia datos viejos
+      localStorage.removeItem('ddr_life4_entries');
+      localStorage.removeItem('ddr_life4_ranks');
+      localStorage.removeItem('ddr_life4_trials');
     }
   });
+
+  // Limpia localStorage viejo al cargar la página
+  localStorage.removeItem('ddr_life4_entries');
+  localStorage.removeItem('ddr_life4_ranks');
+  localStorage.removeItem('ddr_life4_trials');
 
   // Tab switching
   document.getElementById('tabScores').addEventListener('click', function () {
