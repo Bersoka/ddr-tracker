@@ -103,13 +103,15 @@
   .trial-song[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
 
   .cloudStatus { padding:12px 14px; margin-bottom:18px; font-size:12px; border:1px solid var(--line); border-radius:10px; color:var(--text-dim); }
+  .stat-dp .n { color: #b366ff !important; }
+  .stat-dp .l { color: #b366ff; opacity: 0.8; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div style="text-align: center; margin-bottom: 20px;">
-      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 200px; height: auto; border-radius: 8px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 400px; height: auto; border-radius: 10px;">
     </div>
     <h1>🎮 Registro DDR</h1>
     <p class="sub">Tu progreso personal por nivel de dificultad y tu avance en los rangos de LIFE4.</p>
@@ -147,9 +149,9 @@
           <div class="stat"><div class="n" id="statAA_SP">0</div><div class="l">AA (SP)</div></div>
         </div>
         <div class="stats" style="margin-top: 12px;">
-          <div class="stat"><div class="n" id="statMFC_DP">0</div><div class="l">MFC (DP)</div></div>
-          <div class="stat"><div class="n" id="statAAA_DP">0</div><div class="l">AAA (DP)</div></div>
-          <div class="stat"><div class="n" id="statAA_DP">0</div><div class="l">AA (DP)</div></div>
+          <div class="stat stat-dp"><div class="n" id="statMFC_DP">0</div><div class="l">MFC (DP)</div></div>
+          <div class="stat stat-dp"><div class="n" id="statAAA_DP">0</div><div class="l">AAA (DP)</div></div>
+          <div class="stat stat-dp"><div class="n" id="statAA_DP">0</div><div class="l">AA (DP)</div></div>
         </div>
       </div>
 
@@ -292,24 +294,29 @@
   }
 
   function addEvidence(rankIdx, subIdx) {
-    var rankState = mem.ranks[rankIdx] || {};
-    var currentEvidence = rankState['evidence_' + subIdx] || '';
-    var url = prompt('Pega la URL de la evidencia:\n(Imagen, carpeta, o enlace con screenshots/videos)', currentEvidence);
-    if (url !== null) {
-      if (url.trim()) {
-        rankState['evidence_' + subIdx] = url.trim();
-        mem.ranks[rankIdx] = rankState;
-        pushUserDoc();
-        renderRanks();
-        alert('✅ Evidencia guardada correctamente');
-      } else if (currentEvidence) {
-        // Eliminar si está vacío
-        delete rankState['evidence_' + subIdx];
-        mem.ranks[rankIdx] = rankState;
-        pushUserDoc();
-        renderRanks();
-        alert('✅ Evidencia eliminada');
+    try {
+      var rankState = mem.ranks[rankIdx] || {};
+      var currentEvidence = rankState['evidence_' + subIdx] || '';
+      var url = prompt('📎 Pega la URL de la evidencia:\n\n(Imagen, carpeta, o enlace con screenshots/videos)\n\nEjemplo: https://imgur.com/abc123', currentEvidence);
+
+      if (url !== null) {
+        if (url.trim()) {
+          rankState['evidence_' + subIdx] = url.trim();
+          mem.ranks[rankIdx] = rankState;
+          pushUserDoc();
+          renderRanks();
+          alert('✅ Evidencia guardada correctamente!\n\nPuedes verla haciendo clic en "📎 Ver evidencia"');
+        } else if (currentEvidence) {
+          delete rankState['evidence_' + subIdx];
+          mem.ranks[rankIdx] = rankState;
+          pushUserDoc();
+          renderRanks();
+          alert('✅ Evidencia eliminada');
+        }
       }
+    } catch (e) {
+      console.error('Error en addEvidence:', e);
+      alert('❌ Error: ' + e.message);
     }
   }
 
@@ -330,6 +337,12 @@
   }
 
   function renderScores() {
+    // Actualizar filtros desde inputs
+    var songInput = document.getElementById('searchSong');
+    var levelInput = document.getElementById('searchLevel');
+    if (songInput) searchFilters.song = (songInput.value || '').toLowerCase();
+    if (levelInput) searchFilters.level = levelInput.value || '';
+
     var entries = (mem.entries || []).filter(function (e) {
       var songMatch = !searchFilters.song || (e.song || '').toLowerCase().includes(searchFilters.song);
       var levelMatch = !searchFilters.level || (e.level == parseInt(searchFilters.level));
@@ -366,6 +379,8 @@
     });
   }
 
+  var openRanks = {};
+
   function renderRanks() {
     var ranksList = document.getElementById('ranksList');
     ranksList.innerHTML = '';
@@ -391,7 +406,7 @@
         var evidenceHTML = evidence ? '<a href="' + evidence + '" target="_blank" style="color:var(--gold); font-size:11px; display:block; margin-top:6px;">📎 Ver evidencia</a>' : '';
         req.innerHTML = '<div class="req-row"><input type="checkbox" id="req-' + rankIdx + '-' + i + '" ' + (rankState[i] ? 'checked' : '') + '>' +
           '<label for="req-' + rankIdx + '-' + i + '">' + sub.name + '</label>' +
-          '<button type="button" onclick="addEvidence(' + rankIdx + ', ' + i + ')" style="margin-left:auto; padding:4px 8px; font-size:11px; background:var(--gold); border:none; border-radius:4px; cursor:pointer; color:#221d12; font-weight:bold;">+ Evidencia</button></div>' + evidenceHTML;
+          '<button type="button" class="btnEvidence" data-rank="' + rankIdx + '" data-sub="' + i + '" style="margin-left:auto; padding:4px 8px; font-size:11px; background:var(--gold); border:none; border-radius:4px; cursor:pointer; color:#221d12; font-weight:bold;">+ Evidencia</button></div>' + evidenceHTML;
         var chk = req.querySelector('input');
         chk.addEventListener('change', function () {
           rankState[i] = chk.checked;
@@ -399,11 +414,21 @@
           pushUserDoc();
           renderRanks();
         });
+        var btn = req.querySelector('.btnEvidence');
+        if (btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            addEvidence(rankIdx, i);
+          });
+        }
         body.appendChild(req);
       });
       card.appendChild(body);
+      var isOpen = openRanks['rank_' + rankIdx];
+      body.dataset.open = isOpen ? 'true' : 'false';
       head.addEventListener('click', function () {
-        body.dataset.open = body.dataset.open !== 'true' ? 'true' : 'false';
+        openRanks['rank_' + rankIdx] = !openRanks['rank_' + rankIdx];
+        body.dataset.open = openRanks['rank_' + rankIdx] ? 'true' : 'false';
       });
       ranksList.appendChild(card);
     });
