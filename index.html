@@ -407,9 +407,27 @@
 
     list.innerHTML = filtered.length === 0 ? '<div class="empty">Sin scores en este nivel</div>' :
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
-        .map(e => `<div class="row"><div class="song"><div class="name">${e.song}</div><div class="date">${e.date} • Lv${e.level} ${e.style}</div></div><div class="score">${e.score.toLocaleString()}</div></div>`)
+        .map(e => `<div class="row"><div class="song"><div class="name">${e.song}</div><div class="date">${e.date} • Lv${e.level} ${e.style}</div></div><div style="display: flex; gap: 8px; align-items: center;"><div class="score">${e.score.toLocaleString()}</div><button onclick="deleteScore('${e.song}', ${e.level}, '${e.style}', '${e.date}')" style="background: #ef5b5b; color: white; border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer; font-size: 12px; font-weight: 600;">✕</button></div></div>`)
         .join('');
   }
+
+  window.deleteScore = function(song, level, style, date) {
+    if (!confirm(`¿Eliminar el score de "${song}" (Lv${level} ${style}) con fecha ${date}?`)) {
+      return;
+    }
+
+    if (!currentUser) return;
+
+    db.ref('users/' + currentUser.uid + '/scores').once('value', (snapshot) => {
+      snapshot.forEach((childSnapshot) => {
+        const val = childSnapshot.val();
+        if (val.song === song && val.level == level && val.style === style && val.date === date) {
+          childSnapshot.ref.remove();
+          alert('✅ Score eliminado correctamente');
+        }
+      });
+    });
+  };
 
   function updateScoresUI() {
     // Actualizar estadísticas
