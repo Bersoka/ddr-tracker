@@ -175,7 +175,11 @@
       <div class="panel">
         <h2>Añadir Score</h2>
         <form class="entry" id="formEntry">
-          <div><label>Canción</label><input id="inputSong" placeholder="Nombre" autocomplete="off"></div>
+          <div style="position: relative; grid-column: 1/-1;">
+            <label>Canción</label>
+            <input id="inputSong" placeholder="Nombre" autocomplete="off" style="width: 100%;">
+            <div id="songSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-top: none; border-radius: 0 0 7px 7px; display: none; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+          </div>
           <div><label>Nivel</label><select id="inputLevel"><option>—</option></select></div>
           <div><label>Score</label><input id="inputScore" type="number" placeholder="0" min="0"></div>
           <div><label>Estilo</label><select id="inputStyle"><option value="SP">SP</option><option value="DP">DP</option></select></div>
@@ -506,6 +510,42 @@
     }
   };
 
+  // Song suggestions
+  function showSongSuggestions() {
+    const input = document.getElementById('inputSong').value.toLowerCase();
+    const suggestionsDiv = document.getElementById('songSuggestions');
+
+    if (!input) {
+      suggestionsDiv.style.display = 'none';
+      return;
+    }
+
+    const uniqueSongs = [...new Set(mem.entries.map(e => e.song))];
+    const filtered = uniqueSongs.filter(song => song.toLowerCase().includes(input));
+
+    if (filtered.length === 0) {
+      suggestionsDiv.style.display = 'none';
+      return;
+    }
+
+    suggestionsDiv.innerHTML = filtered.map(song =>
+      `<div class="song-suggestion" onclick="document.getElementById('inputSong').value = '${song.replace(/'/g, "\\'")}'; document.getElementById('songSuggestions').style.display = 'none'; document.getElementById('inputSong').focus();">
+        <div class="song-suggestion-text">${song}</div>
+        <div class="song-suggestion-count">${mem.entries.filter(e => e.song === song).length} scores</div>
+      </div>`
+    ).join('');
+
+    suggestionsDiv.style.display = 'block';
+  }
+
+  document.getElementById('inputSong').addEventListener('input', showSongSuggestions);
+  document.getElementById('inputSong').addEventListener('blur', () => {
+    setTimeout(() => {
+      document.getElementById('songSuggestions').style.display = 'none';
+    }, 200);
+  });
+  document.getElementById('inputSong').addEventListener('focus', showSongSuggestions);
+
   // Form scores
   document.getElementById('formEntry').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -524,10 +564,24 @@
       return;
     }
 
+    // Validar que el score sea mejor que uno existente (mismo nivel, canción Y estilo)
+    const existingScore = mem.entries.find(e =>
+      e.song.toLowerCase() === entry.song.toLowerCase() &&
+      e.level == entry.level &&
+      e.style === entry.style
+    );
+
+    if (existingScore && existingScore.score >= entry.score) {
+      alert(`❌ No puedes subir un score que no sea mejor.\n\nCanción: ${existingScore.song} (Lv${existingScore.level} ${existingScore.style})\nScore anterior: ${existingScore.score.toLocaleString()}\nScore intento: ${entry.score.toLocaleString()}\n\n✅ Debes lograr un score mayor a ${existingScore.score.toLocaleString()}`);
+      return;
+    }
+
     const ref = db.ref('users/' + currentUser.uid + '/scores').push();
     ref.set(entry);
     document.getElementById('formEntry').reset();
     document.getElementById('inputDate').valueAsDate = new Date();
+    document.getElementById('songSuggestions').style.display = 'none';
+    alert('✅ Score guardado exitosamente!');
   });
 
   // CSV Export
