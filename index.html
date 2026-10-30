@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Registro DDR</title>
+<title>DDR LIFE4 Tracker</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -14,8 +14,7 @@
   :root {
     --bg: #14121c; --surface: #1e1c29; --surface-2: #262336;
     --text: #ece9f5; --text-dim: #9a94b3; --line: #33304a;
-    --gold: #ffc93c; --up:#ef5b5b; --down:#3fa9f5; --left:#38d996; --right:#ffc93c;
-    --danger: #ef5b5b; --ok:#38d996;
+    --gold: #ffc93c; --accent: #ffc93c;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -25,212 +24,136 @@
   :root[data-theme="dark"] { --bg:#14121c; --surface:#1e1c29; --surface-2:#262336; --text:#ece9f5; --text-dim:#9a94b3; --line:#33304a; }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Mono', ui-monospace, monospace; min-height:100%; -webkit-font-smoothing:antialiased; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
-  header { margin-bottom: 16px; }
-  h1 { font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:clamp(26px,7vw,36px); letter-spacing:.5px; margin:0 0 4px; }
-  .sub { color:var(--text-dim); font-size:13px; line-height:1.5; max-width:48ch; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Mono', ui-monospace, monospace; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { margin-bottom: 24px; text-align: center; }
+  h1 { font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:clamp(28px,7vw,40px); letter-spacing:.5px; margin:0 0 8px; }
+  .sub { color:var(--text-dim); font-size:13px; line-height:1.5; }
 
-  .auth-section { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:20px; text-align:center; }
+  .auth-section { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:24px; text-align:center; }
   .auth-section.hidden { display:none; }
-  .google-btn { background:var(--gold); color:#221d12; border:none; border-radius:7px; padding:11px 20px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; cursor:pointer; width:100%; }
+  .google-btn { background:var(--gold); color:#221d12; border:none; border-radius:8px; padding:12px 24px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:15px; cursor:pointer; width:100%; }
   .google-btn:hover { opacity:0.9; }
-  .logout-btn { background:var(--danger); color:white; border:none; border-radius:7px; padding:8px 12px; font-size:12px; cursor:pointer; }
+  .logout-btn { background:#666; color:white; border:none; border-radius:6px; padding:8px 14px; font-size:12px; cursor:pointer; }
 
-  .tabs { display:flex; gap:8px; margin: 18px 0 20px; border-bottom:1px solid var(--line); }
-  .tab { background:none; border:none; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; padding:9px 4px; cursor:pointer; border-bottom:2px solid transparent; }
+  .header-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .user-info { font-size:12px; color:var(--text-dim); }
+
+  .tabs { display:flex; gap:8px; margin:20px 0; border-bottom:1px solid var(--line); }
+  .tab { background:none; border:none; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; padding:10px 6px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; }
+  .tab:hover { color:var(--text); }
   .tab[data-active="true"] { color:var(--gold); border-bottom-color:var(--gold); }
-  .view { display:none; }
-  .view[data-show="true"] { display:block; }
-  #ranksSection { display:none; }
-  #ranksSection[data-show="true"] { display:block; }
-  #trialsSection { display:none; }
-  #trialsSection[data-show="true"] { display:block; }
-  .song-suggestion { padding: 10px 12px; cursor: pointer; border-top: 1px solid var(--line); font-size: 13px; transition: background 0.2s; }
-  .song-suggestion:hover, .song-suggestion[data-selected="true"] { background: var(--surface-2); }
-  .song-suggestion-text { color: var(--text); }
-  .song-suggestion-count { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
-
-  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; }
-  .stat { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px; }
-  .stat .n { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:21px; color:var(--gold); }
-  .stat .l { color:var(--text-dim); font-size:10.5px; margin-top:2px; }
 
   .panel { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:20px; }
-  .panel h2 { font-family:'Chakra Petch',sans-serif; font-size:15px; margin:0 0 12px; font-weight:600; }
-  form.entry { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  form.entry .full { grid-column:1/-1; }
-  label { display:block; font-size:10.5px; color:var(--text-dim); margin-bottom:4px; }
-  input, select { width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:7px; color:var(--text); padding:9px 10px; font-family:inherit; font-size:14px; }
-  input:focus, select:focus, button:focus { outline:2px solid var(--gold); outline-offset:1px; }
-  button.submit { grid-column:1/-1; background:var(--gold); color:#221d12; border:none; border-radius:7px; padding:11px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
+  .panel h2 { font-family:'Chakra Petch',sans-serif; font-size:15px; margin:0 0 14px; font-weight:600; }
 
-  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
-  .chip { border:1px solid var(--line); background:var(--surface); color:var(--text-dim); border-radius:999px; padding:7px 13px; font-size:12.5px; font-family:'Chakra Petch',sans-serif; font-weight:600; cursor:pointer; }
-  .chip[data-active="true"] { color:#14121c; border-color:transparent; background:var(--gold); }
-
-  .row { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:7px; }
-  .row .song { flex:1; min-width:0; }
-  .row .song .name { font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .row .song .date { color:var(--text-dim); font-size:10.5px; margin-top:2px; }
-  .row .score { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:15px; min-width:78px; text-align:right; }
-  .empty { text-align:center; color:var(--text-dim); font-size:13px; padding:30px 10px; border:1px dashed var(--line); border-radius:10px; }
-
-  .rank-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
-  .rank-card-head { display:flex; align-items:center; justify-content:space-between; padding:13px 14px; cursor:pointer; }
-  .rank-card-head .title { display:flex; align-items:center; gap:9px; }
-  .rank-card-head .swatch { width:11px; height:11px; border-radius:3px; flex:none; }
-  .rank-card-head .name { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14.5px; }
-  .rank-card-head .prog { font-size:11px; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; }
-  .rank-card-head .prog[data-done="true"] { color:var(--ok); }
-  .rank-body { padding: 0 14px 14px; display:none; }
+  .rank-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .rank-card { border-radius:12px; overflow:hidden; border:2px solid; cursor:pointer; transition:all 0.2s; }
+  .rank-card:hover { transform:translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,0.2); }
+  .rank-card.locked { opacity: 0.6; }
+  .rank-header { padding:14px; display:flex; align-items:center; gap:10px; }
+  .rank-icon { font-size:28px; }
+  .rank-info { flex:1; }
+  .rank-name { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:15px; }
+  .rank-level { font-size:11px; margin-top:2px; }
+  .rank-body { padding:14px; display:none; border-top:1px solid rgba(255,255,255,0.1); }
   .rank-body[data-open="true"] { display:block; }
-  .req { display:block; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; line-height:1.4; }
-  .req:first-of-type { border-top:none; }
-  .req input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
-  .req label { color:var(--text); font-size:12.5px; margin:0; cursor:pointer; }
-  .req[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
-  .req-row { display:flex; align-items:flex-start; gap:9px; }
-  .req-row input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
-  .req-row label { flex:1; color: var(--text); font-size:12.5px; margin:0; cursor:pointer; }
 
-  .trial-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
-  .trial-header { display:flex; align-items:center; justify-content:space-between; padding:13px 14px; cursor:pointer; }
-  .trial-title { display:flex; align-items:baseline; gap:8px; flex:1; }
-  .trial-name { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:14.5px; }
-  .trial-info { font-size:11.5px; color:var(--text-dim); }
-  .trial-progress { font-size:11px; color:var(--text-dim); font-family:'Chakra Petch',sans-serif; }
-  .trial-progress[data-done="true"] { color:var(--ok); }
-  .trial-body { padding: 14px; display:none; }
-  .bar { width:100%; height:6px; background:var(--surface-2); border-radius:3px; margin-bottom:10px; overflow:hidden; }
-  .bar-fill { height:100%; background:var(--gold); transition:width 0.2s; }
-  .trial-song { display:flex; align-items:flex-start; gap:9px; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; }
-  .trial-song:first-of-type { border-top:none; }
-  .trial-song input[type="checkbox"] { margin-top:2px; width:16px; height:16px; accent-color: var(--gold); flex:none; }
-  .trial-song label { flex:1; color: var(--text); cursor:pointer; margin:0; }
-  .trial-song[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
+  .level-item { padding:10px 0; border-top:1px solid rgba(255,255,255,0.05); }
+  .level-item:first-child { border-top:none; }
+  .level-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; padding:4px; border-radius:6px; transition:background 0.2s; }
+  .level-header:hover { background:rgba(255,255,255,0.05); }
+  .level-num { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:13px; min-width:24px; }
+  .level-progress { font-size:11px; color:var(--text-dim); flex:1; }
+  .level-toggle { font-size:11px; color:var(--text-dim); }
 
-  .cloudStatus { padding:12px 14px; margin-bottom:18px; font-size:12px; border:1px solid var(--line); border-radius:10px; color:var(--text-dim); }
-  .stat-dp .n { color: #b366ff !important; }
-  .stat-dp .l { color: #b366ff; opacity: 0.8; }
+  .requirements { padding-left:32px; display:none; }
+  .requirements[data-show="true"] { display:block; }
+  .requirement { display:flex; align-items:flex-start; gap:8px; padding:6px 0; font-size:12px; line-height:1.4; }
+  .requirement input[type="checkbox"] { margin-top:3px; width:14px; height:14px; accent-color:var(--gold); flex-shrink:0; cursor:pointer; }
+  .requirement label { flex:1; cursor:pointer; }
+  .requirement[data-checked="true"] label { color:var(--text-dim); text-decoration:line-through; }
+
+  .rank-color-copper { background:linear-gradient(135deg, #b87333 0%, #8b5a2b 100%); color:white; }
+  .rank-color-bronze { background:linear-gradient(135deg, #CD7F32 0%, #a0632f 100%); color:white; }
+  .rank-color-silver { background:linear-gradient(135deg, #C0C0C0 0%, #999999 100%); color:#1e1c29; }
+  .rank-color-gold { background:linear-gradient(135deg, #FFD700 0%, #daa520 100%); color:#1e1c29; }
+  .rank-color-platinum { background:linear-gradient(135deg, #E5E4E2 0%, #c0bfbd 100%); color:#1e1c29; }
+  .rank-color-diamond { background:linear-gradient(135deg, #00D9FF 0%, #00a8cc 100%); color:#1e1c29; }
+  .rank-color-cobalt { background:linear-gradient(135deg, #0047ab 0%, #003580 100%); color:white; }
+  .rank-color-pearl { background:linear-gradient(135deg, #F9F6F2 0%, #d4ccc0 100%); color:#1e1c29; }
+  .rank-color-topaz { background:linear-gradient(135deg, #ffb81c 0%, #ff9500 100%); color:white; }
+  .rank-color-amethyst { background:linear-gradient(135deg, #9966cc 0%, #7744aa 100%); color:white; }
+  .rank-color-emerald { background:linear-gradient(135deg, #50C878 0%, #3aa060 100%); color:white; }
+  .rank-color-onyx { background:linear-gradient(135deg, #353935 0%, #1a1a1a 100%); color:white; }
+  .rank-color-ruby { background:linear-gradient(135deg, #E0115F 0%, #b80c48 100%); color:white; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text-dim); }
+  .empty-state-icon { font-size:48px; margin-bottom:12px; }
+
+  .sync-status { position:fixed; bottom:20px; right:20px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px 16px; font-size:12px; color:var(--text-dim); }
+  .sync-status.syncing { color:var(--gold); }
+
+  @media (max-width: 768px) {
+    .rank-container { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div style="text-align: center; margin-bottom: 24px;">
-      <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 400px; height: auto; border-radius: 10px;">
-    </div>
-    <h1>🎮 Registro DDR</h1>
-    <p class="sub">Tu progreso personal por nivel de dificultad y tu avance en los rangos de LIFE4.</p>
+    <img src="https://zenius-i-vanisher.com/pictures/1408-1716465768.png" alt="DDR Logo" style="max-width: 320px; height: auto; margin-bottom: 16px;">
+    <h1>🎮 DDR LIFE4 Tracker</h1>
+    <p class="sub">Sistema de ranking oficial de Dance Dance Revolution</p>
   </header>
 
   <div class="auth-section" id="authSection">
-    <h2 style="margin-top:0; color:var(--text);">Inicia sesión con Google</h2>
-    <p style="color:var(--text-dim); font-size:12px; margin:0 0 12px;">Tus datos se sincronizarán en todos tus dispositivos.</p>
-    <button class="google-btn" id="googleLoginBtn">🔐 Iniciar sesión con Google</button>
+    <h2 style="margin-top:0; color:var(--text);">Inicia sesión</h2>
+    <p style="color:var(--text-dim); font-size:12px;">Tu progreso se sincronizará en todos tus dispositivos.</p>
+    <button class="google-btn" id="googleLoginBtn">🔐 Iniciar con Google</button>
   </div>
 
-  <div id="appContent" class="hidden">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <div id="userInfo" style="font-size:12px; color:var(--text-dim);"></div>
+  <div id="appContent" style="display:none;">
+    <div class="header-bar">
+      <div class="user-info" id="userInfo">Usuario desconocido</div>
       <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
     </div>
 
-    <div class="cloudStatus" id="cloudStatus">Conectando…</div>
-
     <div class="tabs">
-      <button class="tab" id="tabScores" data-active="true">Scores</button>
-      <button class="tab" id="tabLife4" data-active="false">LIFE4</button>
+      <button class="tab" id="tabRanks" data-active="true">Rangos</button>
+      <button class="tab" id="tabScores" data-active="false">Mis Scores</button>
     </div>
 
-    <div id="viewScores" class="view" data-show="true">
+    <div id="viewRanks" style="display:block;">
       <div class="panel">
-        <h2>💾 Importar/Exportar</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <button type="button" id="btnExportCSV" class="submit" style="background: #4CAF50;">📥 Exportar CSV</button>
-          <button type="button" id="btnImportCSV" class="submit" style="background: #2196F3;">📤 Importar CSV</button>
-        </div>
-        <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+        <h2>🎖️ Mi Rango Actual</h2>
+        <div id="currentRankDisplay" style="font-size:20px; text-align:center; padding:20px; background:var(--surface-2); border-radius:10px;">Selecciona tu rango actual</div>
       </div>
 
       <div class="panel">
-        <h2>📊 Resumen</h2>
-        <div class="stats">
-          <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total canciones</div></div>
-          <div class="stat"><div class="n" id="statBest">—</div><div class="l">Mejor score</div></div>
-        </div>
-        <div class="stats" style="margin-top: 12px;">
-          <div class="stat"><div class="n" id="statMFC_SP">0</div><div class="l">MFC (SP)</div></div>
-          <div class="stat"><div class="n" id="statAAA_SP">0</div><div class="l">AAA (SP)</div></div>
-          <div class="stat"><div class="n" id="statAA_SP">0</div><div class="l">AA (SP)</div></div>
-        </div>
-        <div class="stats" style="margin-top: 12px;">
-          <div class="stat stat-dp"><div class="n" id="statMFC_DP">0</div><div class="l">MFC (DP)</div></div>
-          <div class="stat stat-dp"><div class="n" id="statAAA_DP">0</div><div class="l">AAA (DP)</div></div>
-          <div class="stat stat-dp"><div class="n" id="statAA_DP">0</div><div class="l">AA (DP)</div></div>
-        </div>
+        <h2>Progresión LIFE4</h2>
+        <div class="rank-container" id="ranksList"></div>
       </div>
 
-      <div class="panel">
-        <h2>🔍 Buscar Scores</h2>
-        <div class="entry" style="margin-bottom: 12px;">
-          <div><label>Nombre de canción (opcional)</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off"></div>
-          <div><label>Nivel (opcional)</label><select id="searchLevel"><option value="">— Ninguno —</option></select></div>
-          <div style="grid-column: 1/-1; display: flex; gap: 10px;">
-            <button type="button" class="submit" id="btnSearch" style="flex:1;">🔍 Buscar</button>
-            <button type="button" class="submit" id="btnClearSearch" style="flex:1; background: #666;">Limpiar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Añadir Score</h2>
-        <form class="entry" id="formEntry">
-          <div style="position: relative; grid-column: 1/-1;">
-            <label>Canción</label>
-            <input id="inputSong" placeholder="Nombre" autocomplete="off" style="width: 100%;">
-            <div id="songSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-top: none; border-radius: 0 0 7px 7px; display: none; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
-          </div>
-          <div><label>Nivel</label><select id="inputLevel"><option>—</option></select></div>
-          <div><label>Score</label><input id="inputScore" type="number" placeholder="0" min="0"></div>
-          <div><label>Estilo</label><select id="inputStyle"><option value="SP">SP</option><option value="DP">DP</option></select></div>
-          <div><label>Fecha</label><input id="inputDate" type="date"></div>
-          <button type="submit" class="submit">Guardar</button>
-        </form>
-      </div>
-
-      <div class="panel">
-        <h2>Scores</h2>
-        <div id="scoresList"></div>
+      <div class="empty-state" id="emptyRanks" style="display:none;">
+        <div class="empty-state-icon">📊</div>
+        <p>Cargando rangos...</p>
       </div>
     </div>
 
-    <div id="viewLife4" class="view" data-show="false">
-      <div class="tabs" style="margin:0 0 16px; border-bottom:1px solid var(--line);">
-        <button class="tab" id="subTabRanks" data-active="true">Rangos</button>
-        <button class="tab" id="subTabTrials" data-active="false">Trials</button>
-      </div>
-
-      <div id="ranksSection" data-show="true">
-        <div class="panel">
-          <h2>Tu Rango Actual 🎖️</h2>
-          <div id="currentRankBanner" style="font-size:24px; text-align:center; padding:16px; background:var(--surface-2); border-radius:10px;">—</div>
-        </div>
-        <div style="font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:18px; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;">Completa los requisitos de cada subrango (I a V) para subir de rango.</div>
-        <div id="ranksList"></div>
-      </div>
-
-      <div id="trialsSection" data-show="false">
-        <div style="font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:18px; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;">Completa las 4 canciones de cada trial. Guarda evidencia (screenshots/videos) de tu progreso.</div>
-        <div id="trialsList"></div>
+    <div id="viewScores" style="display:none;">
+      <div class="panel">
+        <h2>📝 Mis Scores</h2>
+        <p style="color:var(--text-dim); margin:0;">Funcionalidad de scores próximamente</p>
       </div>
     </div>
   </div>
+
+  <div class="sync-status" id="syncStatus">Sincronizando...</div>
 </div>
 
 <script>
-(function () {
+(function() {
   const firebaseConfig = {
     apiKey: "AIzaSyDgPcxIOhY7_8TtWcJVUt9bqHKL7uRf8lg",
     authDomain: "ddr-tracker-cf2cf.firebaseapp.com",
@@ -245,638 +168,1410 @@
   const auth = firebase.auth();
   const db = firebase.database();
 
-  var KEY = 'ddr_life4_entries';
-  var RKEY = 'ddr_life4_ranks';
-  var TKEY = 'ddr_life4_trials';
-  var LEVELS = [12, 13, 14, 15, 16, 17, 18, 19];
-  
-  var cloud = { on: false, userId: null, ref: null };
-  var mem = { entries: [], ranks: {}, trials: {} };
-  
-  var RANK_COLORS = {
-    "Noveice": "#888888", "Bronze": "#CD7F32", "Silver": "#C0C0C0", "Gold": "#FFD700",
-    "Platinum": "#E5E4E2", "Diamond": "#00D9FF", "Ruby": "#E0115F", "Sapphire": "#0F52BA",
-    "Emerald": "#50C878", "Jade": "#00A86B", "Garnet": "#733635", "Pearl": "#F9F6F2",
-    "Opal": "#A8A9AD"
-  };
-  
-  var RANK_ICONS = {
-    "Noveice": "🌑", "Bronze": "🥉", "Silver": "🥈", "Gold": "🥇", "Platinum": "💎",
-    "Diamond": "💠", "Ruby": "🩸", "Sapphire": "💙", "Emerald": "💚",
-    "Jade": "🟢", "Garnet": "❤️", "Pearl": "🤍", "Opal": "🔮"
-  };
-  
-  var RANKS = [
-    { name: "Noveice", subs: [{ name: "Clear 20 Lv12 songs", checks: 1 }, { name: "Get 5 grades A or higher", checks: 5 }, { name: "Pass 2 Lv13 songs", checks: 2 }, { name: "Pass 1 Lv14 song", checks: 1 }, { name: "Complete trial Lv12 x2", checks: 2 }]},
-    { name: "Bronze", subs: [{ name: "Clear 30 Lv13 songs", checks: 30 }, { name: "Get 10 grades AA or higher", checks: 10 }, { name: "Pass 5 Lv14 songs", checks: 5 }, { name: "Pass 2 Lv15 songs", checks: 2 }, { name: "Complete trial Lv13 x1", checks: 1 }]},
-    { name: "Silver", subs: [{ name: "Get 5 MFC scores", checks: 5 }, { name: "Clear 20 Lv14 songs", checks: 20 }, { name: "Pass 5 Lv15 songs", checks: 5 }, { name: "Pass 3 Lv16 songs", checks: 3 }, { name: "Complete trial Lv14 x1", checks: 1 }]},
-    { name: "Gold", subs: [{ name: "Clear 30 Lv14 songs", checks: 30 }, { name: "Pass 10 Lv15 songs", checks: 10 }, { name: "Pass 8 Lv16 songs", checks: 8 }, { name: "Pass 2 Lv17 songs", checks: 2 }, { name: "Complete trial Lv15 x1", checks: 1 }]},
-    { name: "Platinum", subs: [{ name: "Get 10 MFC scores", checks: 10 }, { name: "Clear 40 Lv15 songs", checks: 40 }, { name: "Pass 15 Lv16 songs", checks: 15 }, { name: "Pass 5 Lv17 songs", checks: 5 }, { name: "Complete trial Lv16 x2", checks: 2 }]},
-    { name: "Diamond", subs: [{ name: "Get 15 MFC scores", checks: 15 }, { name: "Clear 50 Lv16 songs", checks: 50 }, { name: "Pass 20 Lv17 songs", checks: 20 }, { name: "Pass 5 Lv18 songs", checks: 5 }, { name: "Complete trial Lv17 x2", checks: 2 }]},
-    { name: "Ruby", subs: [{ name: "Get 20 MFC scores", checks: 20 }, { name: "Clear 60 Lv17 songs", checks: 60 }, { name: "Pass 20 Lv18 songs", checks: 20 }, { name: "Pass 8 Lv19 songs", checks: 8 }, { name: "Complete trial Lv18 x3", checks: 3 }]},
-    { name: "Sapphire", subs: [{ name: "Get 25 MFC scores", checks: 25 }, { name: "Clear 70 Lv18 songs", checks: 70 }, { name: "Pass 30 Lv19 songs", checks: 30 }, { name: "AAA rate 80%+ on 5 Lv18 songs", checks: 5 }, { name: "Complete trial Lv19 x1", checks: 1 }]},
-    { name: "Emerald", subs: [{ name: "Get 30 MFC scores", checks: 30 }, { name: "Full combo 10 Lv19 songs", checks: 10 }, { name: "PFC 5 Lv18 songs", checks: 5 }, { name: "Clear all Lv19 songs in folder", checks: 1 }, { name: "Complete trial Lv19 x5", checks: 5 }]},
-    { name: "Jade", subs: [{ name: "Get 40 MFC scores", checks: 40 }, { name: "PFC 10 Lv19 songs", checks: 10 }, { name: "Full combo all Lv19 songs", checks: 1 }, { name: "AAA rate 90%+ on Lv19", checks: 1 }, { name: "Master 100% of trials", checks: 1 }]},
-    { name: "Garnet", subs: [{ name: "Insane mode: 50 MFC scores", checks: 50 }, { name: "Expert survival: Pass 10 Lv19 non-stop", checks: 10 }, { name: "Speedrun: Clear 100 Lv19 in best time", checks: 100 }, { name: "Challenge: Beat extreme trials", checks: 3 }, { name: "Legendary: 100% MFC rate on one session", checks: 1 }]},
-    { name: "Pearl", subs: [{ name: "Celestial: 75 MFC scores", checks: 75 }, { name: "Eternal: 24-hour marathon clear", checks: 1 }, { name: "Apex: Max score on hardest chart", checks: 1 }, { name: "Divine: Perfect play consistency", checks: 1 }, { name: "Eternal Master: Complete all challenges", checks: 1 }]},
-    { name: "Opal", subs: [{ name: "Infinity: Unlimited MFC scores", checks: 1 }, { name: "Transcendence: Redefine possible", checks: 1 }, { name: "Omnipotence: Master all modes", checks: 1 }, { name: "Eternity: Timeless perfection", checks: 1 }, { name: "Beyond: Surpass all limits", checks: 1 }]}
+  // Estados
+  let currentUser = null;
+  let userProgress = {};
+
+  // Definición de LIFE4 Rangos
+  const LIFE4_RANKS = [
+    {
+      name: "Copper",
+      icon: "🥉",
+      color: "copper",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "700k+ en un 1+",
+            "Clear un 3+",
+            "Clear 3 de 1+ seguidos",
+            "Quemar 300 calorías en un día",
+          ],
+          note: "Cumplir 2 de 4"
+        },
+        {
+          num: "II",
+          requirements: [
+            "800k+ en un 1+",
+            "700k+ en un 2+",
+            "Clear un 4+",
+            "Clear 3 de 2+ seguidos",
+            "Quemar 350 calorías en un día",
+          ],
+          note: "Cumplir 3 de 5"
+        },
+        {
+          num: "III",
+          requirements: [
+            "900k+ en un 1+",
+            "800k+ en un 2+",
+            "700k+ en un 3+",
+            "Clear un 5+",
+            "Clear 3 de 3+ seguidos",
+            "Quemar 400 calorías en un día",
+          ],
+          note: "Cumplir 4 de 6"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "950k+ en un 1+",
+            "900k+ en un 2+",
+            "800k+ en un 3+",
+            "700k+ en un 4+",
+            "FC en un 1+",
+            "Clear un 6+",
+            "Clear 3 de 4+ seguidos",
+            "Quemar 450 calorías en un día",
+          ],
+          note: "Cumplir 5 de 8"
+        },
+        {
+          num: "V",
+          requirements: [
+            "AAA en un 1+",
+            "950k+ en un 2+",
+            "900k+ en un 3+",
+            "800k+ en un 4+",
+            "700k+ en un 5+",
+            "FC en un 2+",
+            "Clear un 7+",
+            "Clear 3 de 5+ seguidos",
+            "Quemar 500 calorías en un día",
+          ],
+          note: "Cumplir 5 de 9"
+        }
+      ]
+    },
+    {
+      name: "Bronze",
+      icon: "🥉",
+      color: "bronze",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "AAA en un 2+",
+            "950k+ en un 3+",
+            "900k+ en un 4+",
+            "800k+ en un 5+",
+            "700k+ en un 6+",
+            "FC en un 3+",
+            "Clear un 8+",
+            "Clear 3 de 6+ seguidos",
+            "Quemar 550 calorías en un día",
+          ],
+          note: "Cumplir 5 de 9"
+        },
+        {
+          num: "II",
+          requirements: [
+            "AAA en un 3+",
+            "950k+ en un 4+",
+            "900k+ en un 5+",
+            "800k+ en un 6+",
+            "700k+ en un 7+",
+            "FC en un 4+",
+            "Clear un 9+",
+            "Clear 3 de 7+ seguidos",
+            "Quemar 600 calorías en un día",
+          ],
+          note: "Cumplir 5 de 9"
+        },
+        {
+          num: "III",
+          requirements: [
+            "AAA en un 4+",
+            "950k+ en un 5+",
+            "900k+ en un 6+",
+            "800k+ en un 7+",
+            "700k+ en un 8+",
+            "FC en un 5+",
+            "Clear un 10+",
+            "Clear 3 de 8+ seguidos",
+            "Quemar 650 calorías en un día",
+          ],
+          note: "Cumplir 6 de 9"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "AAA en un 5+",
+            "950k+ en un 6+",
+            "900k+ en un 7+",
+            "800k+ en un 8+",
+            "700k+ en un 9+",
+            "FC en un 6+",
+            "Clear un 11+",
+            "Clear 3 de 9+ seguidos",
+            "Quemar 700 calorías en un día",
+          ],
+          note: "Cumplir 6 de 9"
+        },
+        {
+          num: "V",
+          requirements: [
+            "AAA en un 6+",
+            "950k+ en un 7+",
+            "900k+ en un 8+",
+            "800k+ en un 9+",
+            "700k+ en un 10+",
+            "FC en un 7+",
+            "Clear un 12+",
+            "Clear 3 de 10+ seguidos",
+            "Quemar 750 calorías en un día",
+          ],
+          note: "Cumplir 6 de 9"
+        }
+      ]
+    },
+    {
+      name: "Silver",
+      icon: "🥈",
+      color: "silver",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Silver o superior en 1 Trial",
+            "AAA en un 7+",
+            "950k+ en un 8+",
+            "900k+ en un 9+",
+            "800k+ en un 10+",
+            "700k+ en un 11+",
+            "PFC en un 1+",
+            "FC en un 8+",
+            "Clear un 13+",
+            "Clear 3 de 11+ seguidos",
+            "Quemar 800 calorías en un día",
+          ],
+          note: "Cumplir 6 de 11"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Silver o superior en 1 Trial",
+            "AAA en un 8+",
+            "950k+ en un 9+",
+            "900k+ en un 10+",
+            "800k+ en un 11+",
+            "700k+ en un 12+",
+            "PFC en un 2+",
+            "FC en un 9+",
+            "Clear un 14+",
+            "Clear 3 de 12+ seguidos",
+            "Quemar 850 calorías en un día",
+          ],
+          note: "Cumplir 6 de 11"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Silver o superior en 2 Trials",
+            "AAA en un 9+",
+            "950k+ en un 10+",
+            "900k+ en un 11+",
+            "800k+ en un 12+",
+            "700k+ en un 13+",
+            "PFC en un 3+",
+            "FC en un 10+",
+            "Clear un 15+",
+            "Clear 3 de 13+ seguidos",
+            "Quemar 900 calorías en un día",
+          ],
+          note: "Cumplir 7 de 11"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Silver o superior en 3 Trials",
+            "AAA en un 10+",
+            "950k+ en un 11+",
+            "900k+ en un 12+",
+            "800k+ en un 13+",
+            "700k+ en un 14+",
+            "PFC en un 4+",
+            "FC en un 11+",
+            "Clear 2 de 15+",
+            "Clear 3 de 14+ seguidos",
+            "Quemar 950 calorías en un día",
+          ],
+          note: "Cumplir 7 de 11"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Silver o superior en 4 Trials",
+            "AAA en un 11+",
+            "950k+ en un 12+",
+            "900k+ en un 13+",
+            "800k+ en un 14+",
+            "700k+ en un 15+",
+            "PFC en un 5+",
+            "FC en un 12+",
+            "Clear 3 de 15+",
+            "Clear 3 de 15+ seguidos",
+            "Quemar 1000 calorías en un día",
+          ],
+          note: "Cumplir 7 de 11"
+        }
+      ]
+    },
+    {
+      name: "Gold",
+      icon: "🥇",
+      color: "gold",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Clear 10 de 14+",
+            "800k+ en un 14+",
+            "Clear un 15+",
+            "700k+ en un 15+",
+            "950k+ en un 13+",
+            "AAA en un 12+",
+            "PFC en un 6+",
+            "Silver o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Clear 20 de 14+",
+            "850k+ en un 14+",
+            "Clear 2 de 15+",
+            "750k+ en un 15+",
+            "960k+ en un 13+",
+            "AAA en 2 de 12+",
+            "PFC en un 7+",
+            "Silver o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Clear 30 de 14+",
+            "900k+ en un 14+",
+            "Clear 3 de 15+",
+            "800k+ en un 15+",
+            "970k+ en un 13+",
+            "AAA en 3 de 12+",
+            "PFC en un 8+",
+            "Silver o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Clear 40 de 14+",
+            "950k+ en un 14+",
+            "Clear 4 de 15+",
+            "850k+ en un 15+",
+            "980k+ en un 13+",
+            "AAA en 4 de 12+",
+            "PFC en un 9+",
+            "Silver o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Clear 50 de 14+",
+            "960k+ en un 14+",
+            "Clear 5 de 15+",
+            "900k+ en un 15+",
+            "990k+ en un 13+",
+            "AAA en 5 de 12+",
+            "PFC en un 10+",
+            "Silver o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Platinum",
+      icon: "💎",
+      color: "platinum",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Clear 60 de 14+ sobre 810k",
+            "960k+ en un 14+",
+            "Clear 10 de 15+ sobre 760k",
+            "910k+ en un 15+",
+            "Clear un 16+",
+            "700k+ en un 16+",
+            "AAA en 2 de 13+",
+            "PFC en un 11+",
+            "Gold o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Clear 70 de 14+ sobre 820k",
+            "970k+ en un 14+",
+            "Clear 20 de 15+ sobre 770k",
+            "920k+ en un 15+",
+            "Clear 2 de 16+",
+            "750k+ en un 16+",
+            "AAA en 3 de 13+",
+            "PFC en un 12+",
+            "Gold o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Clear 80 de 14+ sobre 830k",
+            "975k+ en un 14+",
+            "Clear 30 de 15+ sobre 780k",
+            "930k+ en un 15+",
+            "Clear 3 de 16+",
+            "800k+ en un 16+",
+            "AAA en 4 de 13+",
+            "PFC en un 13+",
+            "Gold o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Clear 90 de 14+ sobre 840k",
+            "980k+ en un 14+",
+            "Clear 40 de 15+ sobre 790k",
+            "940k+ en un 15+",
+            "Clear 4 de 16+",
+            "850k+ en un 16+",
+            "AAA en 5 de 13+",
+            "PFC en un 14+",
+            "Gold o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Clear 100 de 14+ sobre 850k",
+            "985k+ en un 14+",
+            "Clear 50 de 15+ sobre 800k",
+            "950k+ en un 15+",
+            "Clear 5 de 16+",
+            "900k+ en un 16+",
+            "AAA en 6 de 13+",
+            "PFC en un 15+",
+            "Gold o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Diamond",
+      icon: "💠",
+      color: "diamond",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Clear 120 de 14+ sobre 860k",
+            "AAA en 2 de 14+",
+            "Clear 60 de 15+ sobre 810k",
+            "960k+ en un 15+",
+            "Clear 10 de 16+ sobre 760k",
+            "910k+ en un 16+",
+            "Clear un 17+",
+            "700k+ en un 17+",
+            "PFC en un 13+",
+            "Platinum o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Clear 140 de 14+ sobre 870k",
+            "AAA en 3 de 14+",
+            "Clear 80 de 15+ sobre 820k",
+            "970k+ en un 15+",
+            "Clear 20 de 16+ sobre 770k",
+            "920k+ en un 16+",
+            "Clear 2 de 17+",
+            "750k+ en un 17+",
+            "PFC en un 14+",
+            "Platinum o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Clear 160 de 14+ sobre 880k",
+            "AAA en 4 de 14+",
+            "Clear 100 de 15+ sobre 830k",
+            "975k+ en un 15+",
+            "Clear 30 de 16+ sobre 780k",
+            "930k+ en un 16+",
+            "Clear 3 de 17+",
+            "800k+ en un 17+",
+            "PFC en un 15+",
+            "Platinum o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Clear 180 de 14+ sobre 890k",
+            "AAA en 5 de 14+",
+            "Clear 120 de 15+ sobre 840k",
+            "980k+ en un 15+",
+            "Clear 40 de 16+ sobre 790k",
+            "940k+ en un 16+",
+            "Clear 4 de 17+",
+            "850k+ en un 17+",
+            "PFC en un 16+",
+            "Platinum o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Clear 200 de 14+ sobre 900k",
+            "AAA en 6 de 14+",
+            "Clear 140 de 15+ sobre 850k",
+            "985k+ en un 15+",
+            "Clear 50 de 16+ sobre 800k",
+            "950k+ en un 16+",
+            "Clear 5 de 17+",
+            "900k+ en un 17+",
+            "PFC en un 17+",
+            "Platinum o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Cobalt",
+      icon: "🔵",
+      color: "cobalt",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Clear todos los 14+ sobre 910k",
+            "PFC en un 14+",
+            "AAA 26 de 14+",
+            "Clear 120 de 15+ sobre 860k",
+            "AAA en 2 de 15+",
+            "Clear 60 de 16+ sobre 810k",
+            "960k+ en un 16+",
+            "Clear 8 de 17+ sobre 760k",
+            "910k+ en un 17+",
+            "Diamond o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Clear todos los 14+ sobre 920k",
+            "PFC en 2 de 14+",
+            "AAA 40 de 14+",
+            "Clear 150 de 15+ sobre 870k",
+            "AAA en 3 de 15+",
+            "Clear 80 de 16+ sobre 820k",
+            "970k+ en un 16+",
+            "Clear 15 de 17+ sobre 770k",
+            "920k+ en un 17+",
+            "Diamond o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Clear todos los 14+ sobre 930k",
+            "PFC en 3 de 14+",
+            "AAA 50 de 14+",
+            "Clear 170 de 15+ sobre 880k",
+            "AAA en 4 de 15+",
+            "Clear 100 de 16+ sobre 830k",
+            "975k+ en un 16+",
+            "Clear 25 de 17+ sobre 780k",
+            "930k+ en un 17+",
+            "Diamond o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Clear todos los 14+ sobre 940k",
+            "PFC en 4 de 14+",
+            "AAA 60 de 14+",
+            "Clear 190 de 15+ sobre 890k",
+            "AAA en 5 de 15+",
+            "Clear 120 de 16+ sobre 840k",
+            "980k+ en un 16+",
+            "Clear 35 de 17+ sobre 790k",
+            "940k+ en un 17+",
+            "Diamond o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Clear todos los 14+ sobre 950k",
+            "PFC en 5 de 14+",
+            "AAA 80 de 14+",
+            "Clear todos los 15+ sobre 900k",
+            "AAA en 6 de 15+",
+            "Clear 140 de 16+ sobre 850k",
+            "985k+ en un 16+",
+            "Clear 45 de 17+ sobre 800k",
+            "950k+ en un 17+",
+            "Diamond o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Pearl",
+      icon: "🤍",
+      color: "pearl",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Clear todos los 14+ sobre 955k",
+            "PFC en 8 de 14+",
+            "AAA 60 de 14+",
+            "Clear todos los 15+ sobre 910k",
+            "PFC en un 15+",
+            "AAA 26 de 15+",
+            "Clear 110 de 16+ sobre 860k",
+            "AAA en 2 de 16+",
+            "Clear 26 de 17+ sobre 810k",
+            "960k+ en un 17+",
+            "Clear un 18+",
+            "700k+ en un 18+",
+            "Cobalt o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Clear todos los 14+ sobre 960k",
+            "PFC en 10 de 14+",
+            "AAA 80 de 14+",
+            "Clear todos los 15+ sobre 920k",
+            "PFC en 2 de 15+",
+            "AAA 40 de 15+",
+            "Clear 140 de 16+ sobre 870k",
+            "AAA en 3 de 16+",
+            "Clear 40 de 17+ sobre 820k",
+            "970k+ en un 17+",
+            "Clear 2 de 18+",
+            "750k+ en un 18+",
+            "Cobalt o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Clear todos los 14+ sobre 965k",
+            "PFC en 12 de 14+",
+            "AAA 100 de 14+",
+            "Clear todos los 15+ sobre 930k",
+            "PFC en 3 de 15+",
+            "AAA 50 de 15+",
+            "Clear 160 de 16+ sobre 880k",
+            "AAA en 4 de 16+",
+            "Clear 50 de 17+ sobre 830k",
+            "975k+ en un 17+",
+            "Clear 3 de 18+",
+            "800k+ en un 18+",
+            "Cobalt o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Clear todos los 14+ sobre 970k",
+            "PFC en 14 de 14+",
+            "AAA 120 de 14+",
+            "Clear todos los 15+ sobre 940k",
+            "PFC en 4 de 15+",
+            "AAA 60 de 15+",
+            "Clear 180 de 16+ sobre 890k",
+            "AAA en 5 de 16+",
+            "Clear 60 de 17+ sobre 840k",
+            "980k+ en un 17+",
+            "Clear 4 de 18+",
+            "850k+ en un 18+",
+            "Cobalt o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Clear todos los 14+ sobre 975k",
+            "PFC en 16 de 14+",
+            "AAA 150 de 14+",
+            "Clear todos los 15+ sobre 950k",
+            "PFC en 5 de 15+",
+            "AAA 80 de 15+",
+            "Clear 200 de 16+ sobre 900k",
+            "AAA en 6 de 16+",
+            "Clear 70 de 17+ sobre 850k",
+            "985k+ en un 17+",
+            "Clear 5 de 18+",
+            "900k+ en un 18+",
+            "Cobalt o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Topaz",
+      icon: "🟠",
+      color: "topaz",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "LIFE4 Clear todos los 14+ sobre 980k",
+            "PFC en 26 de 14+",
+            "AAA 120 de 14+",
+            "Clear todos los 15+ sobre 955k",
+            "PFC en 8 de 15+",
+            "AAA 60 de 15+",
+            "Clear todos los 16+ sobre 910k",
+            "PFC en un 16+",
+            "AAA 26 de 16+",
+            "Clear 60 de 17+ sobre 860k",
+            "AAA en 2 de 17+",
+            "Clear 8 de 18+ sobre 760k",
+            "910k+ en un 18+",
+            "MFC en un 1+",
+            "Pearl o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "LIFE4 Clear todos los 14+ sobre 985k",
+            "PFC en 32 de 14+",
+            "AAA 150 de 14+",
+            "Clear todos los 15+ sobre 960k",
+            "PFC en 10 de 15+",
+            "AAA 80 de 15+",
+            "Clear todos los 16+ sobre 920k",
+            "PFC en 2 de 16+",
+            "AAA 40 de 16+",
+            "Clear 80 de 17+ sobre 870k",
+            "AAA en 3 de 17+",
+            "Clear 15 de 18+ sobre 770k",
+            "920k+ en un 18+",
+            "MFC en un 4+",
+            "Pearl o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "LIFE4 Clear todos los 14+ sobre 990k",
+            "PFC en 38 de 14+",
+            "AAA 180 de 14+",
+            "Clear todos los 15+ sobre 965k",
+            "PFC en 12 de 15+",
+            "AAA 100 de 15+",
+            "Clear todos los 16+ sobre 930k",
+            "PFC en 3 de 16+",
+            "AAA 50 de 16+",
+            "Clear 100 de 17+ sobre 880k",
+            "AAA en 4 de 17+",
+            "Clear 25 de 18+ sobre 780k",
+            "930k+ en un 18+",
+            "MFC en un 7+",
+            "Pearl o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "FC todos los 14+ sobre 995k",
+            "PFC en 44 de 14+",
+            "AAA 200 de 14+",
+            "Clear todos los 15+ sobre 970k",
+            "PFC en 14 de 15+",
+            "AAA 120 de 15+",
+            "Clear todos los 16+ sobre 940k",
+            "PFC en 4 de 16+",
+            "AAA 60 de 16+",
+            "Clear 120 de 17+ sobre 890k",
+            "AAA en 5 de 17+",
+            "Clear 35 de 18+ sobre 790k",
+            "940k+ en un 18+",
+            "MFC en un 10+",
+            "Pearl o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "FC todos los 14+ sobre 999k",
+            "PFC en 50 de 14+",
+            "AAA 220 de 14+",
+            "Clear todos los 15+ sobre 975k",
+            "PFC en 16 de 15+",
+            "AAA 150 de 15+",
+            "Clear todos los 16+ sobre 950k",
+            "PFC en 5 de 16+",
+            "AAA 80 de 16+",
+            "Clear 140 de 17+ sobre 900k",
+            "AAA en 6 de 17+",
+            "Clear 45 de 18+ sobre 800k",
+            "950k+ en un 18+",
+            "Clear un 19+",
+            "700k+ en un 19+",
+            "MFC en un 13+",
+            "Pearl o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Amethyst",
+      icon: "💜",
+      color: "amethyst",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "FC todos los 14+ sobre 991k",
+            "PFC en 60 de 14+",
+            "LIFE4 Clear todos los 15+ sobre 980k",
+            "PFC en 26 de 15+",
+            "AAA 120 de 15+",
+            "Clear todos los 16+ sobre 955k",
+            "PFC en 8 de 16+",
+            "AAA 60 de 16+",
+            "Clear todos los 17+ sobre 910k",
+            "AAA 12 de 17+",
+            "Clear 26 de 18+ sobre 810k",
+            "960k+ en un 18+",
+            "Clear un 19+",
+            "Clear 3 de 19+",
+            "Clear 2 de 19+",
+            "MFC en un 6+",
+            "Topaz o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "FC todos los 14+ sobre 993k",
+            "PFC en 70 de 14+",
+            "LIFE4 Clear todos los 15+ sobre 985k",
+            "PFC en 32 de 15+",
+            "AAA 150 de 15+",
+            "Clear todos los 16+ sobre 960k",
+            "PFC en 10 de 16+",
+            "AAA 80 de 16+",
+            "Clear todos los 17+ sobre 920k",
+            "AAA 20 de 17+",
+            "Clear 40 de 18+ sobre 820k",
+            "970k+ en un 18+",
+            "Clear 2 de 19+",
+            "Clear 4 de 19+",
+            "Clear 3 de 19+",
+            "MFC en un 8+",
+            "Topaz o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "FC todos los 14+ sobre 995k",
+            "PFC en 80 de 14+",
+            "LIFE4 Clear todos los 15+ sobre 990k",
+            "PFC en 38 de 15+",
+            "AAA 180 de 15+",
+            "Clear todos los 16+ sobre 965k",
+            "PFC en 12 de 16+",
+            "AAA 100 de 16+",
+            "Clear todos los 17+ sobre 930k",
+            "AAA 30 de 17+",
+            "Clear 50 de 18+ sobre 830k",
+            "975k+ en un 18+",
+            "Clear 3 de 19+",
+            "Clear 5 de 19+",
+            "Clear 4 de 19+",
+            "MFC en un 9+",
+            "Topaz o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "Great FC todos los 14+ sobre 996k",
+            "PFC en 90 de 14+",
+            "LIFE4 Clear todos los 15+ sobre 995k",
+            "PFC en 44 de 15+",
+            "AAA 200 de 15+",
+            "Clear todos los 16+ sobre 970k",
+            "PFC en 14 de 16+",
+            "AAA 120 de 16+",
+            "Clear todos los 17+ sobre 940k",
+            "AAA 40 de 17+",
+            "Clear 60 de 18+ sobre 840k",
+            "980k+ en un 18+",
+            "Clear 4 de 19+",
+            "Clear 6 de 19+",
+            "Clear 5 de 19+",
+            "MFC en un 11+",
+            "Topaz o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "Great FC todos los 14+ sobre 998k",
+            "PFC en 100 de 14+",
+            "LIFE4 Clear todos los 15+ sobre 999k",
+            "PFC en 50 de 15+",
+            "AAA 220 de 15+",
+            "Clear todos los 16+ sobre 975k",
+            "PFC en 16 de 16+",
+            "AAA 150 de 16+",
+            "Clear todos los 17+ sobre 950k",
+            "AAA 60 de 17+",
+            "Clear 70 de 18+ sobre 850k",
+            "985k+ en un 18+",
+            "Clear todos los 19+",
+            "700k+ en un 19+",
+            "Clear 5 de 19+",
+            "MFC en un 13+",
+            "Topaz o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Emerald",
+      icon: "💚",
+      color: "emerald",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "Great FC todos los 14+ sobre 996k",
+            "PFC en 120 de 14+",
+            "FC todos los 15+ sobre 991k",
+            "PFC en 60 de 15+",
+            "LIFE4 Clear todos los 16+ sobre 980k",
+            "PFC en 26 de 16+",
+            "AAA 112 de 16+",
+            "Clear todos los 17+ sobre 955k",
+            "PFC en un 17+",
+            "AAA 26 de 17+",
+            "Clear 56 de 18+ sobre 860k",
+            "AAA en 2 de 18+",
+            "Clear un 19+",
+            "700k+ en un 19+",
+            "Clear 2 de 19+",
+            "MFC en un 11+",
+            "Amethyst o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "Great FC todos los 14+ sobre 997k",
+            "PFC en 140 de 14+",
+            "FC todos los 15+ sobre 993k",
+            "PFC en 70 de 15+",
+            "LIFE4 Clear todos los 16+ sobre 985k",
+            "PFC en 32 de 16+",
+            "AAA 140 de 16+",
+            "Clear todos los 17+ sobre 960k",
+            "PFC en 2 de 17+",
+            "AAA 40 de 17+",
+            "Clear 70 de 18+ sobre 870k",
+            "AAA en 3 de 18+",
+            "Clear 2 de 19+",
+            "750k+ en un 19+",
+            "Clear 3 de 19+",
+            "MFC en un 12+",
+            "Amethyst o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "Great FC todos los 14+ sobre 998k",
+            "PFC en 160 de 14+",
+            "FC todos los 15+ sobre 995k",
+            "PFC en 80 de 15+",
+            "LIFE4 Clear todos los 16+ sobre 990k",
+            "PFC en 38 de 16+",
+            "AAA 160 de 16+",
+            "Clear todos los 17+ sobre 965k",
+            "PFC en 3 de 17+",
+            "AAA 50 de 17+",
+            "Clear 80 de 18+ sobre 880k",
+            "AAA en 4 de 18+",
+            "Clear 3 de 19+",
+            "800k+ en un 19+",
+            "Clear 4 de 19+",
+            "MFC en un 12+",
+            "Amethyst o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.500k",
+            "PFC en 180 de 14+",
+            "Great FC todos los 15+ sobre 996k",
+            "PFC en 90 de 15+",
+            "LIFE4 Clear todos los 16+ sobre 995k",
+            "PFC en 44 de 16+",
+            "AAA 180 de 16+",
+            "Clear todos los 17+ sobre 970k",
+            "PFC en 4 de 17+",
+            "AAA 60 de 17+",
+            "Clear 90 de 18+ sobre 890k",
+            "AAA en 5 de 18+",
+            "Clear 4 de 19+",
+            "850k+ en un 19+",
+            "Clear 5 de 19+",
+            "MFC en un 13+",
+            "Amethyst o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.720k",
+            "PFC en 200 de 14+",
+            "Great FC todos los 15+ sobre 998k",
+            "PFC en 100 de 15+",
+            "LIFE4 Clear todos los 16+ sobre 999k",
+            "PFC en 50 de 16+",
+            "AAA 200 de 16+",
+            "Clear todos los 17+ sobre 975k",
+            "PFC en 5 de 17+",
+            "AAA 80 de 17+",
+            "Clear 100 de 18+ sobre 900k",
+            "AAA en 6 de 18+",
+            "Clear todos los 19+",
+            "900k+ en un 19+",
+            "Clear 6 de 19+",
+            "MFC en un 14+",
+            "Amethyst o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Onyx",
+      icon: "⚫",
+      color: "onyx",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.500k",
+            "Great FC todos los 15+ sobre 996k",
+            "PFC en 120 de 15+",
+            "FC todos los 16+ sobre 991k",
+            "PFC en 60 de 16+",
+            "LIFE4 Clear todos los 17+ sobre 980k",
+            "PFC en 26 de 17+",
+            "AAA 60 de 17+",
+            "Clear todos los 18+ sobre 910k",
+            "AAA 12 de 18+",
+            "Clear 6 de 19+ sobre 760k",
+            "910k+ en un 19+",
+            "MFC en un 13+",
+            "Emerald o superior en 1 Trial",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "II",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.600k",
+            "Great FC todos los 15+ sobre 997k",
+            "PFC en 140 de 15+",
+            "FC todos los 16+ sobre 993k",
+            "PFC en 70 de 16+",
+            "LIFE4 Clear todos los 17+ sobre 985k",
+            "PFC en 32 de 17+",
+            "AAA 80 de 17+",
+            "Clear todos los 18+ sobre 920k",
+            "AAA 20 de 18+",
+            "Clear 8 de 19+ sobre 770k",
+            "920k+ en un 19+",
+            "MFC en un 14+",
+            "Emerald o superior en 2 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "III",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.650k",
+            "Great FC todos los 15+ sobre 998k",
+            "PFC en 160 de 15+",
+            "FC todos los 16+ sobre 995k",
+            "PFC en 80 de 16+",
+            "LIFE4 Clear todos los 17+ sobre 990k",
+            "PFC en 38 de 17+",
+            "AAA 100 de 17+",
+            "Clear todos los 18+ sobre 930k",
+            "AAA 30 de 18+",
+            "Clear 10 de 19+ sobre 780k",
+            "930k+ en un 19+",
+            "MFC en un 14+",
+            "Emerald o superior en 3 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.680k",
+            "PFC en todos los 15+ con promedio 999.600k",
+            "Great FC todos los 16+ sobre 996k",
+            "PFC en 120 de 16+",
+            "FC todos los 17+ sobre 991k",
+            "PFC en 60 de 17+",
+            "LIFE4 Clear todos los 18+ sobre 980k",
+            "PFC en 26 de 18+",
+            "AAA 120 de 18+",
+            "Clear 15 de 19+ sobre 790k",
+            "940k+ en un 19+",
+            "MFC en un 15+",
+            "Emerald o superior en 4 Trials",
+          ],
+          note: "Cumplir todos"
+        },
+        {
+          num: "V",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.700k",
+            "PFC en todos los 15+ con promedio 999.650k",
+            "Great FC todos los 16+ sobre 998k",
+            "PFC en 140 de 16+",
+            "FC todos los 17+ sobre 993k",
+            "PFC en 80 de 17+",
+            "LIFE4 Clear todos los 18+ sobre 985k",
+            "PFC en 32 de 18+",
+            "AAA 150 de 18+",
+            "Clear todos los 19+ sobre 800k",
+            "950k+ en un 19+",
+            "MFC en un 15+",
+            "Emerald o superior en 5 Trials",
+          ],
+          note: "Cumplir todos"
+        }
+      ]
+    },
+    {
+      name: "Ruby",
+      icon: "🩸",
+      color: "ruby",
+      levels: [
+        {
+          num: "I",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.720k",
+            "PFC en todos los 15+ con promedio 999.500k",
+            "Great FC todos los 16+ sobre 996k",
+            "PFC en 112 de 16+",
+            "FC todos los 17+ sobre 991k",
+            "PFC en 26 de 17+",
+            "Clear todos los 18+ sobre 955k",
+            "PFC en un 18+",
+            "AAA 26 de 18+",
+            "Clear todos los 19+ sobre 820k",
+            "960k+ en un 19+",
+            "MFC en un 14+",
+            "Onyx o superior en 1 Trial",
+          ],
+          note: "Cumplir todos - ¡Eres leyenda!"
+        },
+        {
+          num: "II",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.740k",
+            "PFC en todos los 15+ con promedio 999.600k",
+            "Great FC todos los 16+ sobre 997k",
+            "PFC en 140 de 16+",
+            "FC todos los 17+ sobre 993k",
+            "PFC en 32 de 17+",
+            "Clear todos los 18+ sobre 960k",
+            "PFC en 2 de 18+",
+            "AAA 40 de 18+",
+            "Clear todos los 19+ sobre 830k",
+            "970k+ en un 19+",
+            "MFC en un 15+",
+            "Onyx o superior en 2 Trials",
+          ],
+          note: "Cumplir todos - ¡Eres leyenda!"
+        },
+        {
+          num: "III",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.760k",
+            "PFC en todos los 15+ con promedio 999.650k",
+            "Great FC todos los 16+ sobre 998k",
+            "PFC en 160 de 16+",
+            "FC todos los 17+ sobre 995k",
+            "PFC en 38 de 17+",
+            "Clear todos los 18+ sobre 965k",
+            "PFC en 3 de 18+",
+            "AAA 60 de 18+",
+            "Clear todos los 19+ sobre 840k",
+            "975k+ en un 19+",
+            "MFC en un 15+",
+            "Onyx o superior en 3 Trials",
+          ],
+          note: "Cumplir todos - ¡Eres leyenda!"
+        },
+        {
+          num: "IV",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.780k",
+            "PFC en todos los 15+ con promedio 999.680k",
+            "PFC en todos los 16+ con promedio 999.600k",
+            "Great FC todos los 17+ sobre 996k",
+            "PFC en 120 de 17+",
+            "FC todos los 18+ sobre 991k",
+            "PFC en 60 de 18+",
+            "LIFE4 Clear todos los 19+ sobre 980k",
+            "PFC en 26 de 19+",
+            "AAA 120 de 19+",
+            "MFC en un 16+",
+            "Onyx o superior en 4 Trials",
+          ],
+          note: "Cumplir todos - ¡Eres leyenda!"
+        },
+        {
+          num: "V",
+          requirements: [
+            "PFC en todos los 14+ con promedio 999.800k",
+            "PFC en todos los 15+ con promedio 999.700k",
+            "PFC en todos los 16+ con promedio 999.650k",
+            "Great FC todos los 17+ sobre 998k",
+            "PFC en 140 de 17+",
+            "FC todos los 18+ sobre 993k",
+            "PFC en 80 de 18+",
+            "LIFE4 Clear todos los 19+ sobre 985k",
+            "PFC en 32 de 19+",
+            "AAA 150 de 19+",
+            "Clear todos los 19+ sobre 950k",
+            "MFC en un 16+",
+            "Onyx o superior en 5 Trials",
+          ],
+          note: "Cumplir todos - ¡MÁXIMO RANGO!"
+        }
+      ]
+    }
   ];
 
-  var TRIALS = [
-    {id:"trial-124-1", name:"Trial 124-A", tier:124, songs:4}, {id:"trial-124-2", name:"Trial 124-B", tier:124, songs:4},
-    {id:"trial-124-3", name:"Trial 124-C", tier:124, songs:4}, {id:"trial-124-4", name:"Trial 124-D", tier:124, songs:4},
-    {id:"trial-134-1", name:"Trial 134-A", tier:134, songs:4}, {id:"trial-134-2", name:"Trial 134-B", tier:134, songs:4},
-    {id:"trial-134-3", name:"Trial 134-C", tier:134, songs:4}, {id:"trial-134-4", name:"Trial 134-D", tier:134, songs:4},
-    {id:"trial-144-1", name:"Trial 144-A", tier:144, songs:4}, {id:"trial-144-2", name:"Trial 144-B", tier:144, songs:4},
-    {id:"trial-144-3", name:"Trial 144-C", tier:144, songs:4}, {id:"trial-144-4", name:"Trial 144-D", tier:144, songs:4},
-    {id:"trial-154-1", name:"Trial 154-A", tier:154, songs:4}, {id:"trial-154-2", name:"Trial 154-B", tier:154, songs:4},
-    {id:"trial-154-3", name:"Trial 154-C", tier:154, songs:4}, {id:"trial-154-4", name:"Trial 154-D", tier:154, songs:4},
-    {id:"trial-164-1", name:"Trial 164-A", tier:164, songs:4}, {id:"trial-164-2", name:"Trial 164-B", tier:164, songs:4},
-    {id:"trial-164-3", name:"Trial 164-C", tier:164, songs:4}, {id:"trial-164-4", name:"Trial 164-D", tier:164, songs:4},
-    {id:"trial-174-1", name:"Trial 174-A", tier:174, songs:4}, {id:"trial-174-2", name:"Trial 174-B", tier:174, songs:4},
-    {id:"trial-174-3", name:"Trial 174-C", tier:174, songs:4}, {id:"trial-174-4", name:"Trial 174-D", tier:174, songs:4},
-    {id:"trial-184-1", name:"Trial 184-A", tier:184, songs:4}, {id:"trial-184-2", name:"Trial 184-B", tier:184, songs:4},
-    {id:"trial-184-3", name:"Trial 184-C", tier:184, songs:4}, {id:"trial-184-4", name:"Trial 184-D", tier:184, songs:4},
-    {id:"trial-194-1", name:"Trial 194-A", tier:194, songs:4}, {id:"trial-194-2", name:"Trial 194-B", tier:194, songs:4},
-    {id:"trial-194-3", name:"Trial 194-C", tier:194, songs:4}, {id:"trial-194-4", name:"Trial 194-D", tier:194, songs:4}
-  ];
+  // Firebase Auth
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('authSection').style.display = 'none';
+      document.getElementById('appContent').style.display = 'block';
+      document.getElementById('userInfo').textContent = user.displayName || user.email;
 
-  function clone(x) { return JSON.parse(JSON.stringify(x)); }
-
-  function setCloudStatus(text, ok) {
-    var el = document.getElementById('cloudStatus');
-    el.textContent = text;
-    el.style.color = ok ? 'var(--ok)' : 'var(--text-dim)';
-    el.style.borderColor = ok ? 'var(--ok)' : 'var(--line)';
-  }
-
-  function pushUserDoc() {
-    if (!cloud.on || !cloud.ref) return;
-    cloud.ref.set({ entries: clone(mem.entries), ranks: clone(mem.ranks), trials: clone(mem.trials) })
-      .then(function () { setCloudStatus('✅ Sincronizado en la nube — accesible desde cualquier dispositivo.', true); })
-      .catch(function (e) { setCloudStatus('❌ Error: ' + (e.message || 'error')); });
-  }
-
-  function addEvidence(rankIdx, subIdx) {
-    try {
-      var rankState = mem.ranks[rankIdx] || {};
-      var currentEvidence = rankState['evidence_' + subIdx] || '';
-      var url = prompt('📎 Pega la URL de la evidencia:\n\n(Imagen, carpeta, o enlace con screenshots/videos)\n\nEjemplo: https://imgur.com/abc123', currentEvidence);
-
-      if (url !== null) {
-        if (url.trim()) {
-          rankState['evidence_' + subIdx] = url.trim();
-          mem.ranks[rankIdx] = rankState;
-          pushUserDoc();
-          renderRanks();
-          alert('✅ Evidencia guardada correctamente!\n\nPuedes verla haciendo clic en "📎 Ver evidencia"');
-        } else if (currentEvidence) {
-          delete rankState['evidence_' + subIdx];
-          mem.ranks[rankIdx] = rankState;
-          pushUserDoc();
-          renderRanks();
-          alert('✅ Evidencia eliminada');
-        }
-      }
-    } catch (e) {
-      console.error('Error en addEvidence:', e);
-      alert('❌ Error: ' + e.message);
-    }
-  }
-
-  var searchFilters = { song: '', level: '' };
-
-  function applySearch() {
-    searchFilters.song = (document.getElementById('searchSong').value || '').toLowerCase();
-    searchFilters.level = document.getElementById('searchLevel').value || '';
-    renderScores();
-  }
-
-  function clearSearch() {
-    searchFilters.song = '';
-    searchFilters.level = '';
-    document.getElementById('searchSong').value = '';
-    document.getElementById('searchLevel').value = '';
-    renderScores();
-  }
-
-  function exportCSV() {
-    var entries = mem.entries || [];
-    if (!entries.length) {
-      alert('⚠️ No hay scores para exportar');
-      return;
-    }
-    var csv = 'Canción,Nivel,Score,Estilo,Fecha\n';
-    entries.forEach(function (e) {
-      csv += '"' + (e.song || '').replace(/"/g, '""') + '",' + e.level + ',' + (e.score || 0) + ',' + (e.style || 'SP') + ',' + (e.date || '') + '\n';
-    });
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    var link = document.createElement('a');
-    var url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'ddr-scores-' + new Date().toISOString().split('T')[0] + '.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    alert('✅ Scores exportados correctamente');
-  }
-
-  function showSongSuggestions() {
-    var input = document.getElementById('inputSong');
-    var suggestionsDiv = document.getElementById('songSuggestions');
-    var query = (input.value || '').toLowerCase().trim();
-
-    if (!query) {
-      suggestionsDiv.style.display = 'none';
-      return;
-    }
-
-    // Obtener canciones únicas de mem.entries
-    var songSet = {};
-    (mem.entries || []).forEach(function(e) {
-      if (e.song) {
-        songSet[e.song] = (songSet[e.song] || 0) + 1;
-      }
-    });
-
-    // Filtrar canciones que contienen el query
-    var suggestions = Object.keys(songSet).filter(function(song) {
-      return song.toLowerCase().includes(query);
-    }).sort();
-
-    if (suggestions.length === 0) {
-      suggestionsDiv.style.display = 'none';
-      return;
-    }
-
-    suggestionsDiv.innerHTML = '';
-    suggestions.forEach(function(song) {
-      var div = document.createElement('div');
-      div.className = 'song-suggestion';
-      div.innerHTML = '<div class="song-suggestion-text">' + song + '</div>' +
-        '<div class="song-suggestion-count">' + songSet[song] + ' score(s)</div>';
-      div.addEventListener('click', function() {
-        input.value = song;
-        suggestionsDiv.style.display = 'none';
-        document.getElementById('inputLevel').focus();
+      const userRef = db.ref('users/' + user.uid + '/life4');
+      userRef.on('value', (snap) => {
+        userProgress = snap.val() || {};
+        updateAllUI();
       });
-      suggestionsDiv.appendChild(div);
-    });
-
-    suggestionsDiv.style.display = 'block';
-  }
-
-  function importCSV(file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        var csv = e.target.result;
-        var lines = csv.split('\n');
-        var imported = 0;
-        for (var i = 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
-          var cols = lines[i].split(',');
-          if (cols.length < 5) continue;
-          var song = cols[0].replace(/^"|"$/g, '').replace(/""/g, '"');
-          var level = parseInt(cols[1]);
-          var score = parseInt(cols[2]);
-          var style = cols[3].trim() || 'SP';
-          var date = cols[4].trim();
-          if (!song || !level || !score) continue;
-
-          var exists = mem.entries.find(function(e) {
-            return e.song.toLowerCase() === song.toLowerCase() && e.level === level && (e.style || 'SP') === style;
-          });
-          if (!exists || score > exists.score) {
-            if (exists) {
-              exists.score = score;
-              exists.date = date;
-            } else {
-              var maxId = mem.entries.reduce(function(m, e) { return Math.max(m, e.id || 0); }, 0);
-              mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
-            }
-            imported++;
-          }
-        }
-        if (imported > 0) {
-          pushUserDoc();
-          renderScores();
-          alert('✅ ' + imported + ' scores importados correctamente');
-        } else {
-          alert('⚠️ No hay scores nuevos para importar');
-        }
-      } catch (err) {
-        alert('❌ Error al importar CSV: ' + err.message);
-        console.error(err);
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function renderScores() {
-    // Actualizar filtros desde inputs
-    var songInput = document.getElementById('searchSong');
-    var levelInput = document.getElementById('searchLevel');
-    if (songInput) searchFilters.song = (songInput.value || '').toLowerCase();
-    if (levelInput) searchFilters.level = levelInput.value || '';
-
-    var entries = (mem.entries || []).filter(function (e) {
-      var songMatch = !searchFilters.song || (e.song || '').toLowerCase().includes(searchFilters.song);
-      var levelMatch = !searchFilters.level || (e.level == parseInt(searchFilters.level));
-      return songMatch && levelMatch;
-    });
-    var allEntries = mem.entries || [];
-    document.getElementById('statTotal').textContent = allEntries.length;
-    var best = allEntries.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 0);
-    document.getElementById('statBest').textContent = best ? best.toLocaleString('en-US') : '—';
-
-    // Estadísticas SP
-    var mfc_sp = allEntries.filter(function (e) { return e.score >= 1000000 && (e.style || 'SP') === 'SP'; }).length;
-    var aaa_sp = allEntries.filter(function (e) { return e.score >= 900000 && e.score < 1000000 && (e.style || 'SP') === 'SP'; }).length;
-    var aa_sp = allEntries.filter(function (e) { return e.score >= 800000 && e.score < 900000 && (e.style || 'SP') === 'SP'; }).length;
-    document.getElementById('statMFC_SP').textContent = mfc_sp;
-    document.getElementById('statAAA_SP').textContent = aaa_sp;
-    document.getElementById('statAA_SP').textContent = aa_sp;
-
-    // Estadísticas DP
-    var mfc_dp = allEntries.filter(function (e) { return e.score >= 1000000 && e.style === 'DP'; }).length;
-    var aaa_dp = allEntries.filter(function (e) { return e.score >= 900000 && e.score < 1000000 && e.style === 'DP'; }).length;
-    var aa_dp = allEntries.filter(function (e) { return e.score >= 800000 && e.score < 900000 && e.style === 'DP'; }).length;
-    document.getElementById('statMFC_DP').textContent = mfc_dp;
-    document.getElementById('statAAA_DP').textContent = aaa_dp;
-    document.getElementById('statAA_DP').textContent = aa_dp;
-    var scoresList = document.getElementById('scoresList');
-    scoresList.innerHTML = entries.length ? '' : '<div class="empty">' + (searchFilters.song || searchFilters.level ? 'Sin resultados' : 'Sin scores aún') + '</div>';
-    entries.forEach(function (e) {
-      var row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = '<div class="song"><div class="name">' + e.song + ' (Lv' + e.level + ')</div><div class="date">' + (e.date || '—') + '</div></div>' +
-        '<div class="score">' + (e.score ? e.score.toLocaleString('en-US') : '—') + '</div>';
-      scoresList.appendChild(row);
-    });
-  }
-
-  var openRanks = {};
-
-  function renderRanks() {
-    var ranksList = document.getElementById('ranksList');
-    ranksList.innerHTML = '';
-    RANKS.forEach(function (rank, rankIdx) {
-      var rankState = mem.ranks[rankIdx] || {};
-      var card = document.createElement('div');
-      card.className = 'rank-card';
-      var head = document.createElement('div');
-      head.className = 'rank-card-head';
-      var completed = 0;
-      [0,1,2,3,4].forEach(function (i) { if (rankState[i]) completed++; });
-      var isDone = completed === 5;
-      head.innerHTML = '<div class="title"><div class="swatch" style="background:' + RANK_COLORS[rank.name] + '"></div>' +
-        '<div><div class="name">' + RANK_ICONS[rank.name] + ' ' + rank.name + '</div></div></div>' +
-        '<div class="prog" data-done="' + isDone + '">' + completed + '/5</div>';
-      card.appendChild(head);
-      var body = document.createElement('div');
-      body.className = 'rank-body';
-      rank.subs.forEach(function (sub, i) {
-        var req = document.createElement('div');
-        req.className = 'req';
-        var evidence = rankState['evidence_' + i] || '';
-        var evidenceHTML = evidence ? '<a href="' + evidence + '" target="_blank" style="color:var(--gold); font-size:11px; display:block; margin-top:6px;">📎 Ver evidencia</a>' : '';
-        req.innerHTML = '<div class="req-row"><input type="checkbox" id="req-' + rankIdx + '-' + i + '" ' + (rankState[i] ? 'checked' : '') + '>' +
-          '<label for="req-' + rankIdx + '-' + i + '">' + sub.name + '</label>' +
-          '<button type="button" class="btnEvidence" data-rank="' + rankIdx + '" data-sub="' + i + '" style="margin-left:auto; padding:4px 8px; font-size:11px; background:var(--gold); border:none; border-radius:4px; cursor:pointer; color:#221d12; font-weight:bold;">+ Evidencia</button></div>' + evidenceHTML;
-        var chk = req.querySelector('input');
-        chk.addEventListener('change', function () {
-          rankState[i] = chk.checked;
-          mem.ranks[rankIdx] = rankState;
-          pushUserDoc();
-          renderRanks();
-        });
-        var btn = req.querySelector('.btnEvidence');
-        if (btn) {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            addEvidence(rankIdx, i);
-          });
-        }
-        body.appendChild(req);
-      });
-      card.appendChild(body);
-      var isOpen = openRanks['rank_' + rankIdx];
-      body.dataset.open = isOpen ? 'true' : 'false';
-      head.addEventListener('click', function () {
-        openRanks['rank_' + rankIdx] = !openRanks['rank_' + rankIdx];
-        body.dataset.open = openRanks['rank_' + rankIdx] ? 'true' : 'false';
-      });
-      ranksList.appendChild(card);
-    });
-    var currentIdx = Object.keys(mem.ranks).reduce(function (max, k) { 
-      var state = mem.ranks[k];
-      var completed = [0,1,2,3,4].reduce(function (sum, i) { return sum + (state[i] ? 1 : 0); }, 0);
-      return completed === 5 && parseInt(k) > max ? parseInt(k) : max;
-    }, -1) + 1;
-    var banner = document.getElementById('currentRankBanner');
-    if (currentIdx < RANKS.length) {
-      banner.textContent = RANK_ICONS[RANKS[currentIdx].name] + ' ' + RANKS[currentIdx].name;
+    } else {
+      document.getElementById('authSection').style.display = 'block';
+      document.getElementById('appContent').style.display = 'none';
     }
-  }
-
-  var openTrials = {};
-  function renderTrials() {
-    var state = mem.trials;
-    var wrap = document.getElementById('trialsList');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    var byTier = {};
-    TRIALS.forEach(function (trial) {
-      if (!byTier[trial.tier]) byTier[trial.tier] = [];
-      byTier[trial.tier].push(trial);
-    });
-    Object.keys(byTier).sort().forEach(function (tier) {
-      var tierDiv = document.createElement('div');
-      byTier[tier].forEach(function (trial) {
-        var trialKey = trial.id;
-        var completed = state[trialKey] ? Object.keys(state[trialKey]).filter(function (k) { return state[trialKey][k]; }).length : 0;
-        var isDone = completed >= trial.songs;
-        var card = document.createElement('div');
-        card.className = 'trial-card';
-        var header = document.createElement('div');
-        header.className = 'trial-header';
-        var titleDiv = document.createElement('div');
-        titleDiv.className = 'trial-title';
-        var titleSpan = document.createElement('span');
-        titleSpan.className = 'trial-name';
-        titleSpan.textContent = trial.name;
-        titleDiv.appendChild(titleSpan);
-        var infoSpan = document.createElement('span');
-        infoSpan.className = 'trial-info';
-        infoSpan.textContent = '(' + trial.songs + ' canciones)';
-        titleDiv.appendChild(infoSpan);
-        header.appendChild(titleDiv);
-        var progSpan = document.createElement('span');
-        progSpan.className = 'trial-progress';
-        progSpan.dataset.done = isDone;
-        progSpan.textContent = completed + '/' + trial.songs + (isDone ? ' ✓' : '');
-        header.appendChild(progSpan);
-        card.appendChild(header);
-        var body = document.createElement('div');
-        body.className = 'trial-body';
-        body.style.display = openTrials[trialKey] ? 'block' : 'none';
-        var barDiv = document.createElement('div');
-        barDiv.className = 'bar';
-        var barFill = document.createElement('div');
-        barFill.className = 'bar-fill';
-        barFill.style.width = Math.min(100, (completed / trial.songs) * 100) + '%';
-        barDiv.appendChild(barFill);
-        body.appendChild(barDiv);
-        for (var i = 0; i < trial.songs; i++) {
-          (function (trialKey, i) {
-            var isChecked = state[trialKey] && state[trialKey][i];
-            var req = document.createElement('div');
-            req.className = 'trial-song';
-            req.dataset.checked = isChecked;
-            var cid = trialKey + '-' + i;
-            var chk = document.createElement('input');
-            chk.type = 'checkbox';
-            chk.id = cid;
-            chk.checked = isChecked;
-            req.appendChild(chk);
-            var lbl = document.createElement('label');
-            lbl.htmlFor = cid;
-            lbl.textContent = 'Canción ' + (i + 1);
-            req.appendChild(lbl);
-            body.appendChild(req);
-            chk.addEventListener('change', function (ev) {
-              var st = clone(mem.trials);
-              if (!st[trialKey]) st[trialKey] = {};
-              st[trialKey][i] = ev.target.checked;
-              mem.trials = st;
-              pushUserDoc();
-              var completed2 = st[trialKey] ? Object.keys(st[trialKey]).filter(function (k) { return st[trialKey][k]; }).length : 0;
-              progSpan.textContent = completed2 + '/' + trial.songs + (completed2 >= trial.songs ? ' ✓' : '');
-              progSpan.dataset.done = completed2 >= trial.songs;
-              barFill.style.width = Math.min(100, (completed2 / trial.songs) * 100) + '%';
-            });
-          })(trialKey, i);
-        }
-        card.appendChild(body);
-        header.addEventListener('click', function (ev) {
-          if (ev.target.tagName === 'BUTTON' || ev.target.tagName === 'INPUT') return;
-          openTrials[trialKey] = !openTrials[trialKey];
-          body.style.display = openTrials[trialKey] ? 'block' : 'none';
-        });
-        tierDiv.appendChild(card);
-      });
-      wrap.appendChild(tierDiv);
-    });
-  }
-
-  function initCloud() {
-    setCloudStatus('Cargando datos…');
-    cloud.ref = db.ref('users/' + cloud.userId + '/data');
-    cloud.on = true;
-    
-    cloud.ref.on('value', function (snap) {
-      if (!snap.exists()) {
-        mem.entries = [];
-        mem.ranks = {};
-        mem.trials = {};
-      } else {
-        var data = snap.val();
-        mem.entries = data.entries || [];
-        mem.ranks = data.ranks || {};
-        mem.trials = data.trials || {};
-      }
-      renderScores();
-      renderRanks();
-      renderTrials();
-      setCloudStatus('✅ Sincronizado — datos disponibles en cualquier dispositivo.', true);
-    }, function (err) {
-      setCloudStatus('❌ Error: ' + (err.message || 'error'));
-    });
-  }
+  });
 
   // Google Login
-  document.getElementById('googleLoginBtn').addEventListener('click', function () {
-    var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(function (e) {
-      setCloudStatus('❌ Error en login: ' + (e.message || 'error'));
-    });
+  document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      console.error('Error:', e);
+    }
   });
 
   // Logout
-  document.getElementById('logoutBtn').addEventListener('click', function () {
+  document.getElementById('logoutBtn').addEventListener('click', () => {
     auth.signOut();
   });
 
-  // Monitor auth state
-  auth.onAuthStateChanged(function (user) {
-    var authSection = document.getElementById('authSection');
-    var appContent = document.getElementById('appContent');
-
-    if (user) {
-      cloud.userId = user.uid;
-      document.getElementById('userInfo').textContent = '👤 ' + (user.displayName || user.email);
-      authSection.classList.add('hidden');
-      appContent.classList.remove('hidden');
-      setCloudStatus('Conectando con tu cuenta de Google…');
-      initCloud();
-    } else {
-      authSection.classList.remove('hidden');
-      appContent.classList.add('hidden');
-      cloud.on = false;
-      // Limpia datos viejos
-      localStorage.removeItem('ddr_life4_entries');
-      localStorage.removeItem('ddr_life4_ranks');
-      localStorage.removeItem('ddr_life4_trials');
-    }
+  // Tabs
+  document.getElementById('tabRanks').addEventListener('click', () => {
+    document.getElementById('viewRanks').style.display = 'block';
+    document.getElementById('viewScores').style.display = 'none';
+    document.getElementById('tabRanks').setAttribute('data-active', 'true');
+    document.getElementById('tabScores').setAttribute('data-active', 'false');
   });
 
-  // Limpia localStorage viejo al cargar la página
-  localStorage.removeItem('ddr_life4_entries');
-  localStorage.removeItem('ddr_life4_ranks');
-  localStorage.removeItem('ddr_life4_trials');
-
-  // Tab switching
-  document.getElementById('tabScores').addEventListener('click', function () {
-    document.getElementById('tabScores').dataset.active = 'true';
-    document.getElementById('tabLife4').dataset.active = 'false';
-    document.getElementById('viewScores').dataset.show = 'true';
-    document.getElementById('viewLife4').dataset.show = 'false';
+  document.getElementById('tabScores').addEventListener('click', () => {
+    document.getElementById('viewRanks').style.display = 'none';
+    document.getElementById('viewScores').style.display = 'block';
+    document.getElementById('tabRanks').setAttribute('data-active', 'false');
+    document.getElementById('tabScores').setAttribute('data-active', 'true');
   });
 
-  document.getElementById('tabLife4').addEventListener('click', function () {
-    document.getElementById('tabLife4').dataset.active = 'true';
-    document.getElementById('tabScores').dataset.active = 'false';
-    document.getElementById('viewLife4').dataset.show = 'true';
-    document.getElementById('viewScores').dataset.show = 'false';
-  });
+  // Renderizar rangos
+  function updateAllUI() {
+    const ranksList = document.getElementById('ranksList');
+    ranksList.innerHTML = '';
 
-  document.getElementById('subTabRanks').addEventListener('click', function () {
-    document.getElementById('subTabRanks').dataset.active = 'true';
-    document.getElementById('subTabTrials').dataset.active = 'false';
-    document.getElementById('ranksSection').dataset.show = 'true';
-    document.getElementById('trialsSection').dataset.show = 'false';
-  });
+    LIFE4_RANKS.forEach((rank, rankIdx) => {
+      const rankCard = document.createElement('div');
+      rankCard.className = `rank-card rank-color-${rank.color.toLowerCase()}`;
+      rankCard.innerHTML = `
+        <div class="rank-header">
+          <div class="rank-icon">${rank.icon}</div>
+          <div class="rank-info" style="flex:1;">
+            <div class="rank-name">${rank.name}</div>
+            <div class="rank-level" id="progress-${rankIdx}">0/5 niveles</div>
+          </div>
+          <div class="rank-toggle">▼</div>
+        </div>
+        <div class="rank-body" id="body-${rankIdx}">
+          ${rank.levels.map((level, levelIdx) => {
+            const levelId = `${rankIdx}-${levelIdx}`;
+            const baseKey = `rank_${rankIdx}_level_${levelIdx}`;
+            return `
+              <div class="level-item">
+                <div class="level-header" onclick="toggleLevel(${rankIdx}, ${levelIdx})">
+                  <div class="level-num">Nivel ${level.num}</div>
+                  <div class="level-progress" id="prog-${levelId}">0/${level.requirements.length} requisitos</div>
+                  <div class="level-toggle">▶</div>
+                </div>
+                <div class="requirements" id="reqs-${levelId}">
+                  <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">${level.note}</div>
+                  ${level.requirements.map((req, reqIdx) => {
+                    const reqKey = `${baseKey}_req_${reqIdx}`;
+                    const isChecked = userProgress[reqKey] === true;
+                    return `
+                      <div class="requirement" data-checked="${isChecked}" id="req-${reqKey}">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleRequirement('${reqKey}', this.checked)">
+                        <label>${req}</label>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
 
-  document.getElementById('subTabTrials').addEventListener('click', function () {
-    document.getElementById('subTabTrials').dataset.active = 'true';
-    document.getElementById('subTabRanks').dataset.active = 'false';
-    document.getElementById('ranksSection').dataset.show = 'false';
-    document.getElementById('trialsSection').dataset.show = 'true';
-  });
-
-  // Form submission
-  // Event listeners para búsqueda y export/import
-  setTimeout(function() {
-    var btnSearch = document.getElementById('btnSearch');
-    var btnClear = document.getElementById('btnClearSearch');
-    var btnExport = document.getElementById('btnExportCSV');
-    var btnImport = document.getElementById('btnImportCSV');
-    var fileInput = document.getElementById('csvFileInput');
-
-    if (btnSearch) {
-      btnSearch.addEventListener('click', function (e) {
-        e.preventDefault();
-        applySearch();
+      rankCard.addEventListener('click', (e) => {
+        if (e.target.closest('.level-header') || e.target.closest('input')) return;
+        const body = rankCard.querySelector('.rank-body');
+        body.setAttribute('data-open', body.getAttribute('data-open') === 'true' ? 'false' : 'true');
       });
+
+      ranksList.appendChild(rankCard);
+    });
+
+    updateProgress();
+  }
+
+  window.toggleLevel = function(rankIdx, levelIdx) {
+    const reqs = document.getElementById(`reqs-${rankIdx}-${levelIdx}`);
+    reqs.setAttribute('data-show', reqs.getAttribute('data-show') === 'true' ? 'false' : 'true');
+  };
+
+  window.toggleRequirement = function(key, checked) {
+    if (currentUser) {
+      const ref = db.ref('users/' + currentUser.uid + '/life4/' + key);
+      ref.set(checked ? true : null);
     }
-    if (btnClear) {
-      btnClear.addEventListener('click', function (e) {
-        e.preventDefault();
-        clearSearch();
-      });
-    }
-    if (btnExport) {
-      btnExport.addEventListener('click', function (e) {
-        e.preventDefault();
-        exportCSV();
-      });
-    }
-    if (btnImport) {
-      btnImport.addEventListener('click', function (e) {
-        e.preventDefault();
-        fileInput.click();
-      });
-    }
-    if (fileInput) {
-      fileInput.addEventListener('change', function (e) {
-        if (e.target.files.length > 0) {
-          importCSV(e.target.files[0]);
-          fileInput.value = '';
+  };
+
+  function updateProgress() {
+    LIFE4_RANKS.forEach((rank, rankIdx) => {
+      let completed = 0;
+      rank.levels.forEach((level, levelIdx) => {
+        const baseKey = `rank_${rankIdx}_level_${levelIdx}`;
+        let levelCompleted = 0;
+        level.requirements.forEach((_, reqIdx) => {
+          const reqKey = `${baseKey}_req_${reqIdx}`;
+          if (userProgress[reqKey] === true) levelCompleted++;
+        });
+
+        const progEl = document.getElementById(`prog-${rankIdx}-${levelIdx}`);
+        if (progEl) {
+          progEl.textContent = `${levelCompleted}/${level.requirements.length} requisitos`;
+        }
+
+        if (levelCompleted === level.requirements.length) {
+          completed++;
         }
       });
-    }
 
-    // Event listener para sugerencias de canción
-    var inputSong = document.getElementById('inputSong');
-    if (inputSong) {
-      inputSong.addEventListener('input', showSongSuggestions);
-      inputSong.addEventListener('blur', function() {
-        setTimeout(function() {
-          document.getElementById('songSuggestions').style.display = 'none';
-        }, 200);
-      });
-    }
-  }, 100);
-
-  document.getElementById('formEntry').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var song = document.getElementById('inputSong').value.trim();
-    var level = parseInt(document.getElementById('inputLevel').value);
-    var score = parseInt(document.getElementById('inputScore').value) || 0;
-    var style = document.getElementById('inputStyle').value;
-    var date = document.getElementById('inputDate').value;
-    if (!song || !level || !score) return;
-
-    // Buscar si ya existe un score de la misma canción y nivel
-    var existingIdx = -1;
-    for (var i = 0; i < mem.entries.length; i++) {
-      if (mem.entries[i].song.toLowerCase() === song.toLowerCase() && mem.entries[i].level === level && (mem.entries[i].style || 'SP') === style) {
-        existingIdx = i;
-        break;
+      const progressEl = document.getElementById(`progress-${rankIdx}`);
+      if (progressEl) {
+        progressEl.textContent = `${completed}/5 niveles`;
       }
-    }
+    });
+  }
 
-    if (existingIdx >= 0) {
-      // Si existe y el nuevo score es mejor, reemplazar
-      if (score > mem.entries[existingIdx].score) {
-        mem.entries[existingIdx].score = score;
-        mem.entries[existingIdx].date = date;
-        alert('✅ Score actualizado a ' + score.toLocaleString('en-US') + ' (anterior: ' + mem.entries[existingIdx].score.toLocaleString('en-US') + ')');
-      } else {
-        alert('⚠️ Ya tienes un score más alto de esta canción:\n' + mem.entries[existingIdx].score.toLocaleString('en-US'));
-        return;
-      }
-    } else {
-      // Si no existe, crear nuevo
-      var maxId = mem.entries.reduce(function (m, e) { return Math.max(m, e.id || 0); }, 0);
-      mem.entries.push({ id: maxId + 1, song: song, level: level, score: score, style: style, date: date });
-      alert('✅ Score guardado correctamente');
-    }
-
-    pushUserDoc();
-    renderScores();
-    document.getElementById('inputSong').value = '';
-    document.getElementById('inputLevel').value = '—';
-    document.getElementById('inputScore').value = '';
-    document.getElementById('inputDate').value = '';
-  });
-
-  LEVELS.forEach(function (lv) {
-    var opt = document.createElement('option');
-    opt.value = lv;
-    opt.textContent = 'Lv ' + lv;
-    document.getElementById('inputLevel').appendChild(opt);
-    var opt2 = document.createElement('option');
-    opt2.value = lv;
-    opt2.textContent = 'Lv ' + lv;
-    document.getElementById('searchLevel').appendChild(opt2);
-  });
-
-  // Hide auth section initially
-  document.getElementById('authSection').classList.add('hidden');
-  document.getElementById('appContent').classList.add('hidden');
+  // Sync status
+  const syncStatus = document.getElementById('syncStatus');
+  if (currentUser) {
+    syncStatus.textContent = '✓ Sincronizado';
+    syncStatus.classList.remove('syncing');
+  }
 })();
 </script>
 </body>
