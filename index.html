@@ -83,19 +83,19 @@
   .req label { color:var(--text); font-size:12.5px; margin:0; cursor:pointer; }
   .req[data-checked="true"] label { color: var(--text-dim); text-decoration: line-through; }
 
-  .rank-color-copper { background:linear-gradient(135deg, #b87333 0%, #8b5a2b 100%); }
-  .rank-color-bronze { background:linear-gradient(135deg, #CD7F32 0%, #a0632f 100%); }
-  .rank-color-silver { background:linear-gradient(135deg, #C0C0C0 0%, #999999 100%); }
-  .rank-color-gold { background:linear-gradient(135deg, #FFD700 0%, #daa520 100%); }
-  .rank-color-platinum { background:linear-gradient(135deg, #E5E4E2 0%, #c0bfbd 100%); }
-  .rank-color-diamond { background:linear-gradient(135deg, #00D9FF 0%, #00a8cc 100%); }
-  .rank-color-cobalt { background:linear-gradient(135deg, #0047ab 0%, #003580 100%); }
-  .rank-color-pearl { background:linear-gradient(135deg, #F9F6F2 0%, #d4ccc0 100%); }
-  .rank-color-topaz { background:linear-gradient(135deg, #ffb81c 0%, #ff9500 100%); }
-  .rank-color-amethyst { background:linear-gradient(135deg, #9966cc 0%, #7744aa 100%); }
-  .rank-color-emerald { background:linear-gradient(135deg, #50C878 0%, #3aa060 100%); }
-  .rank-color-onyx { background:linear-gradient(135deg, #353935 0%, #1a1a1a 100%); }
-  .rank-color-ruby { background:linear-gradient(135deg, #E0115F 0%, #b80c48 100%); }
+  .rank-color-copper { background: #1a1a1a; border: 2px solid #b87333; }
+  .rank-color-bronze { background: #1a1a1a; border: 2px solid #CD7F32; }
+  .rank-color-silver { background: #1a1a1a; border: 2px solid #C0C0C0; }
+  .rank-color-gold { background: #1a1a1a; border: 2px solid #FFD700; }
+  .rank-color-platinum { background: #1a1a1a; border: 2px solid #E5E4E2; }
+  .rank-color-diamond { background: #1a1a1a; border: 2px solid #00D9FF; }
+  .rank-color-cobalt { background: #1a1a1a; border: 2px solid #0047ab; }
+  .rank-color-pearl { background: #1a1a1a; border: 2px solid #F9F6F2; }
+  .rank-color-topaz { background: #1a1a1a; border: 2px solid #ffb81c; }
+  .rank-color-amethyst { background: #1a1a1a; border: 2px solid #9966cc; }
+  .rank-color-emerald { background: #1a1a1a; border: 2px solid #50C878; }
+  .rank-color-onyx { background: #1a1a1a; border: 2px solid #353935; }
+  .rank-color-ruby { background: #1a1a1a; border: 2px solid #E0115F; }
 </style>
 </head>
 <body>
@@ -380,7 +380,7 @@
     container.innerHTML = '<button class="level-filter" data-level="all" style="background: var(--gold); color: #221d12; border: 1px solid var(--gold); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px;">Ver Todos (' + mem.entries.length + ')</button>' +
       LEVELS.map(l => {
         const count = levelCounts[l] || 0;
-        return `<button class="level-filter" data-level="${l}" style="background: ${selectedLevelFilter === String(l) ? 'var(--gold)' : 'var(--surface)'}; color: ${selectedLevelFilter === String(l) ? '#221d12' : 'var(--text)'}; border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">Lv${l} (${count})</button>`;
+        return `<button class="level-filter" data-level="${l}" style="background: ${selectedLevelFilter === String(l) ? '#4CAF50' : 'var(--surface)'}; color: ${selectedLevelFilter === String(l) ? 'white' : 'var(--text)'}; border: 1px solid ${selectedLevelFilter === String(l) ? '#4CAF50' : 'var(--line)'}; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">Lv${l} (${count})</button>`;
       }).join('');
 
     // Agregar event listeners
