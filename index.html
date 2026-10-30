@@ -163,9 +163,14 @@
       <div class="panel" id="levelStatsPanel" style="display: none;">
         <h2 id="levelStatsTitle">Estadísticas del Nivel</h2>
         <div class="stats">
-          <div class="stat"><div class="n" id="levelStatMFC">0</div><div class="l">MFC</div></div>
-          <div class="stat"><div class="n" id="levelStatAAA">0</div><div class="l">AAA</div></div>
-          <div class="stat"><div class="n" id="levelStatAA">0</div><div class="l">AA</div></div>
+          <div class="stat stat-sp"><div class="n" id="levelStatMFC_SP">0</div><div class="l">MFC (SP)</div></div>
+          <div class="stat stat-sp"><div class="n" id="levelStatAAA_SP">0</div><div class="l">AAA (SP)</div></div>
+          <div class="stat stat-sp"><div class="n" id="levelStatAA_SP">0</div><div class="l">AA (SP)</div></div>
+        </div>
+        <div class="stats" style="margin-top: 12px;">
+          <div class="stat stat-dp"><div class="n" id="levelStatMFC_DP">0</div><div class="l">MFC (DP)</div></div>
+          <div class="stat stat-dp"><div class="n" id="levelStatAAA_DP">0</div><div class="l">AAA (DP)</div></div>
+          <div class="stat stat-dp"><div class="n" id="levelStatAA_DP">0</div><div class="l">AA (DP)</div></div>
         </div>
       </div>
 
@@ -414,16 +419,23 @@
     if (selectedLevelFilter) {
       filtered = mem.entries.filter(e => e.level == selectedLevelFilter);
 
-      // Calcular estadísticas del nivel seleccionado
-      const mfc = filtered.filter(e => e.score === 1000000).length;
-      const aaa = filtered.filter(e => e.score >= 990000 && e.score < 1000000).length;
-      const aa = filtered.filter(e => e.score >= 950000 && e.score < 990000).length;
+      // Calcular estadísticas del nivel seleccionado por estilo
+      const mfc_sp = filtered.filter(e => e.score === 1000000 && e.style === 'SP').length;
+      const aaa_sp = filtered.filter(e => e.score >= 990000 && e.score < 1000000 && e.style === 'SP').length;
+      const aa_sp = filtered.filter(e => e.score >= 950000 && e.score < 990000 && e.style === 'SP').length;
+
+      const mfc_dp = filtered.filter(e => e.score === 1000000 && e.style === 'DP').length;
+      const aaa_dp = filtered.filter(e => e.score >= 990000 && e.score < 1000000 && e.style === 'DP').length;
+      const aa_dp = filtered.filter(e => e.score >= 950000 && e.score < 990000 && e.style === 'DP').length;
 
       // Mostrar estadísticas
       document.getElementById('levelStatsTitle').textContent = `Estadísticas Lv${selectedLevelFilter}`;
-      document.getElementById('levelStatMFC').textContent = mfc;
-      document.getElementById('levelStatAAA').textContent = aaa;
-      document.getElementById('levelStatAA').textContent = aa;
+      document.getElementById('levelStatMFC_SP').textContent = mfc_sp;
+      document.getElementById('levelStatAAA_SP').textContent = aaa_sp;
+      document.getElementById('levelStatAA_SP').textContent = aa_sp;
+      document.getElementById('levelStatMFC_DP').textContent = mfc_dp;
+      document.getElementById('levelStatAAA_DP').textContent = aaa_dp;
+      document.getElementById('levelStatAA_DP').textContent = aa_dp;
       statsPanel.style.display = 'block';
     } else {
       statsPanel.style.display = 'none';
