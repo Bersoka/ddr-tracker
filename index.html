@@ -160,6 +160,15 @@
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;" id="levelFilters"></div>
       </div>
 
+      <div class="panel" id="levelStatsPanel" style="display: none;">
+        <h2 id="levelStatsTitle">Estadísticas del Nivel</h2>
+        <div class="stats">
+          <div class="stat"><div class="n" id="levelStatMFC">0</div><div class="l">MFC</div></div>
+          <div class="stat"><div class="n" id="levelStatAAA">0</div><div class="l">AAA</div></div>
+          <div class="stat"><div class="n" id="levelStatAA">0</div><div class="l">AA</div></div>
+        </div>
+      </div>
+
       <div class="panel">
         <h2>🔍 Buscar Scores</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
@@ -399,10 +408,25 @@
 
   function displayFilteredScores() {
     const list = document.getElementById('scoresList');
+    const statsPanel = document.getElementById('levelStatsPanel');
     let filtered = mem.entries;
 
     if (selectedLevelFilter) {
       filtered = mem.entries.filter(e => e.level == selectedLevelFilter);
+
+      // Calcular estadísticas del nivel seleccionado
+      const mfc = filtered.filter(e => e.score === 1000000).length;
+      const aaa = filtered.filter(e => e.score >= 990000 && e.score < 1000000).length;
+      const aa = filtered.filter(e => e.score >= 950000 && e.score < 990000).length;
+
+      // Mostrar estadísticas
+      document.getElementById('levelStatsTitle').textContent = `Estadísticas Lv${selectedLevelFilter}`;
+      document.getElementById('levelStatMFC').textContent = mfc;
+      document.getElementById('levelStatAAA').textContent = aaa;
+      document.getElementById('levelStatAA').textContent = aa;
+      statsPanel.style.display = 'block';
+    } else {
+      statsPanel.style.display = 'none';
     }
 
     list.innerHTML = filtered.length === 0 ? '<div class="empty">Sin scores en este nivel</div>' :
