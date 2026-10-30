@@ -156,6 +156,11 @@
       </div>
 
       <div class="panel">
+        <h2>📋 Filtrar por Nivel</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;" id="levelFilters"></div>
+      </div>
+
+      <div class="panel">
         <h2>🔍 Buscar Scores</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
           <div><label>Canción</label><input id="searchSong" placeholder="Ej: Valkyrie" autocomplete="off"></div>
@@ -360,6 +365,48 @@
   });
 
   // SCORES UI
+  let selectedLevelFilter = null;
+
+  function renderLevelFilters() {
+    const container = document.getElementById('levelFilters');
+    const levelCounts = {};
+
+    // Contar scores por nivel
+    mem.entries.forEach(e => {
+      levelCounts[e.level] = (levelCounts[e.level] || 0) + 1;
+    });
+
+    // Crear botones para cada nivel
+    container.innerHTML = '<button class="level-filter" data-level="all" style="background: var(--gold); color: #221d12; border: 1px solid var(--gold); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px;">Ver Todos (' + mem.entries.length + ')</button>' +
+      LEVELS.map(l => {
+        const count = levelCounts[l] || 0;
+        return `<button class="level-filter" data-level="${l}" style="background: ${selectedLevelFilter === String(l) ? 'var(--gold)' : 'var(--surface)'}; color: ${selectedLevelFilter === String(l) ? '#221d12' : 'var(--text)'}; border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">Lv${l} (${count})</button>`;
+      }).join('');
+
+    // Agregar event listeners
+    document.querySelectorAll('.level-filter').forEach(btn => {
+      btn.addEventListener('click', function() {
+        selectedLevelFilter = this.dataset.level === 'all' ? null : this.dataset.level;
+        renderLevelFilters();
+        displayFilteredScores();
+      });
+    });
+  }
+
+  function displayFilteredScores() {
+    const list = document.getElementById('scoresList');
+    let filtered = mem.entries;
+
+    if (selectedLevelFilter) {
+      filtered = mem.entries.filter(e => e.level == selectedLevelFilter);
+    }
+
+    list.innerHTML = filtered.length === 0 ? '<div class="empty">Sin scores en este nivel</div>' :
+      filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(e => `<div class="row"><div class="song"><div class="name">${e.song}</div><div class="date">${e.date} • Lv${e.level} ${e.style}</div></div><div class="score">${e.score.toLocaleString()}</div></div>`)
+        .join('');
+  }
+
   function updateScoresUI() {
     // Actualizar estadísticas
     const total = mem.entries.length;
@@ -382,14 +429,11 @@
     document.getElementById('statAAA_DP').textContent = aaa_dp;
     document.getElementById('statAA_DP').textContent = aa_dp;
 
-    // Actualizar lista
-    const list = document.getElementById('scoresList');
-    list.innerHTML = mem.entries.length === 0 ? '<div class="empty">Sin scores aún</div>' :
-      mem.entries.sort((a, b) => new Date(b.date) - new Date(a.date))
-        .map(e => `<div class="row"><div class="song"><div class="name">${e.song}</div><div class="date">${e.date} • Lv${e.level} ${e.style}</div></div><div class="score">${e.score.toLocaleString()}</div></div>`)
-        .join('');
+    // Renderizar filtros de niveles y scores
+    renderLevelFilters();
+    displayFilteredScores();
 
-    // Populate nivel select
+    // Populate nivel select en búsqueda
     const levelSelect = document.getElementById('searchLevel');
     const currentValue = levelSelect.value;
     levelSelect.innerHTML = '<option value="">— Todos —</option>' +
@@ -539,6 +583,7 @@
   document.getElementById('btnClearSearch').addEventListener('click', () => {
     document.getElementById('searchSong').value = '';
     document.getElementById('searchLevel').value = '';
+    selectedLevelFilter = null;
     updateScoresUI();
   });
 
