@@ -24,7 +24,8 @@
   :root[data-theme="dark"] { --bg:#14121c; --surface:#1e1c29; --surface-2:#262336; --text:#ece9f5; --text-dim:#9a94b3; --line:#33304a; }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Mono', ui-monospace, monospace; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  body { margin:0; background:var(--bg) url('bg.jpg') center/cover fixed no-repeat; color:var(--text); font-family:'IBM Plex Mono', ui-monospace, monospace; min-height:100vh; -webkit-font-smoothing:antialiased; position:relative; }
+  body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20, 18, 28, 0.75); pointer-events:none; z-index:-1; }
   .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
   header { margin-bottom: 20px; text-align: center; }
   h1 { font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:clamp(26px,7vw,36px); letter-spacing:.5px; margin:0 0 4px; }
