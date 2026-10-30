@@ -405,10 +405,10 @@
 
     LIFE4_RANKS.forEach((rank, rankIdx) => {
       let completed = 0;
-      rank.levels.forEach((level) => {
+      rank.levels.forEach((level, levelIdx) => {
         let levelCompleted = 0;
+        const baseKey = `rank_${rankIdx}_level_${levelIdx}`;
         level.requirements.forEach((req, reqIdx) => {
-          const baseKey = `rank_${rankIdx}_level_${level.num.charCodeAt(0) - 65}`;
           const key = `${baseKey}_req_${reqIdx}`;
           if (mem.ranks[key] === true) levelCompleted++;
         });
@@ -424,7 +424,7 @@
     // Mostrar rango actual
     const bannerEl = document.getElementById('currentRankBanner');
     if (currentRank) {
-      bannerEl.textContent = `${currentRank.icon} ${currentRank.name}`;
+      bannerEl.innerHTML = `<span style="font-size: 32px; margin-right: 12px;">${currentRank.icon}</span><span style="font-size: 24px; font-family: 'Chakra Petch', sans-serif; font-weight: 700;">${currentRank.name} (V)</span>`;
       bannerEl.style.color = 'var(--gold)';
     } else {
       bannerEl.textContent = 'Selecciona tu rango actual';
