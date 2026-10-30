@@ -546,9 +546,15 @@
           return `<div class="req" data-checked="${checked}"><input type="checkbox" ${checked ? 'checked' : ''} onchange="event.stopPropagation(); toggleReq('${key}', this.checked)"><label onclick="event.stopPropagation()">${req}</label></div>`;
         }).join('');
 
-        if (levelCompleted === level.requirements.length) completed++;
+        // Extraer número requerido de la nota (ej: "Cumplir 5 de 9" → 5)
+        const requiredMatch = level.note.match(/Cumplir (\d+)/);
+        const required = requiredMatch ? parseInt(requiredMatch[1]) : level.requirements.length;
+        const levelIsComplete = levelCompleted >= required;
 
-        return `<div onclick="event.stopPropagation()"><strong>Nivel ${level.num}</strong> (${levelCompleted}/${level.requirements.length}) - ${level.note}<br>${reqs}</div>`;
+        if (levelIsComplete) completed++;
+
+        const completeClass = levelIsComplete ? ' style="background: var(--surface-2); border: 2px solid var(--gold);"' : '';
+        return `<div onclick="event.stopPropagation()"${completeClass}><strong>Nivel ${level.num}</strong> (${levelCompleted}/${level.requirements.length}) - ${level.note}${levelIsComplete ? ' ✅' : ''}<br>${reqs}</div>`;
       }).join('<hr style="border:none; border-top:1px solid var(--line); margin:12px 0;">');
 
       const isOpen = mem.openRanks[rankIdx] === true;
