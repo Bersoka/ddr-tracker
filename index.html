@@ -237,7 +237,7 @@
   const db = firebase.database();
 
   const LEVELS = [12, 13, 14, 15, 16, 17, 18, 19];
-  let mem = { entries: [], ranks: {} };
+  let mem = { entries: [], ranks: {}, openRanks: {} };
   let currentUser = null;
 
   const LIFE4_RANKS = [
@@ -551,7 +551,8 @@
         return `<div onclick="event.stopPropagation()"><strong>Nivel ${level.num}</strong> (${levelCompleted}/${level.requirements.length}) - ${level.note}<br>${reqs}</div>`;
       }).join('<hr style="border:none; border-top:1px solid var(--line); margin:12px 0;">');
 
-      return `<div class="rank-card rank-color-${rank.color}"><div class="rank-card-head" onclick="if(event.target.tagName !== 'INPUT') this.parentElement.querySelector('.rank-body').setAttribute('data-open', this.parentElement.querySelector('.rank-body').getAttribute('data-open') !== 'true')"><div class="title"><div style="font-size:20px;">${rank.icon}</div><div class="name">${rank.name}</div></div><div class="prog" data-done="${completed === 5}">${completed}/5</div></div><div class="rank-body" data-open="false" onclick="event.stopPropagation()">${levelHtml}</div></div>`;
+      const isOpen = mem.openRanks[rankIdx] === true;
+      return `<div class="rank-card rank-color-${rank.color}"><div class="rank-card-head" onclick="if(event.target.tagName !== 'INPUT') { mem.openRanks[${rankIdx}] = !mem.openRanks[${rankIdx}]; this.parentElement.querySelector('.rank-body').setAttribute('data-open', mem.openRanks[${rankIdx}]); }"><div class="title"><div style="font-size:20px;">${rank.icon}</div><div class="name">${rank.name}</div></div><div class="prog" data-done="${completed === 5}">${completed}/5</div></div><div class="rank-body" data-open="${isOpen}" onclick="event.stopPropagation()">${levelHtml}</div></div>`;
     }).join('');
   }
 
