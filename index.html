@@ -514,7 +514,10 @@
           const key = `${baseKey}_req_${reqIdx}`;
           if (mem.ranks[key] === true) levelCompleted++;
         });
-        if (levelCompleted === level.requirements.length) completed++;
+        // Usar la misma lógica de requisitos que en renderLife4UI
+        const requiredMatch = level.note.match(/Cumplir (\d+)/);
+        const required = requiredMatch ? parseInt(requiredMatch[1]) : level.requirements.length;
+        if (levelCompleted >= required) completed++;
       });
 
       if (completed === 5) {
